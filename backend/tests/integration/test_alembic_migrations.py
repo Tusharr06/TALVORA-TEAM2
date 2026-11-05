@@ -37,6 +37,11 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "outbox_event" in tables
         assert "idempotency_record" in tables
         assert "audit_event" in tables
+        assert "auth_session" in tables
+        assert "login_transaction" in tables
+        assert "membership_invitation" in tables
+        assert "team" in tables
+        assert "team_member" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -48,6 +53,8 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         # Verify tables dropped cleanly (only alembic_version remains)
         assert "organizations" not in remaining_tables
         assert "job_operation" not in remaining_tables
+        assert "auth_session" not in remaining_tables
+        assert "team" not in remaining_tables
         fresh_engine.dispose()
 
     finally:

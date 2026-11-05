@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from talvora.config import Settings
 from talvora.shared.application.ports import HealthChecker
@@ -50,6 +51,8 @@ class DatabaseManager:
                 kwargs["pool_timeout"] = self.settings.db_timeout_seconds
             else:
                 kwargs["execution_options"] = {"schema_translate_map": {"identity": None}}
+                kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["poolclass"] = StaticPool
 
             self._sync_engine = create_engine(db_url, **kwargs)
             self._sync_session_maker = sessionmaker(
@@ -84,6 +87,8 @@ class DatabaseManager:
                 kwargs["pool_timeout"] = self.settings.db_timeout_seconds
             else:
                 kwargs["execution_options"] = {"schema_translate_map": {"identity": None}}
+                kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["poolclass"] = StaticPool
 
             self._async_engine = create_async_engine(db_url, **kwargs)
             self._async_session_maker = async_sessionmaker(

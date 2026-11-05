@@ -125,6 +125,23 @@ class UnitOfWork:
         self.session.add(audit_entry)
         return audit_entry
 
+    def record_audit_event(
+        self,
+        action: str,
+        resource_type: str,
+        resource_id: UUID | None = None,
+        payload: dict[str, Any] | None = None,
+        correlation_id: str | None = None,
+    ) -> AuditEvent:
+        """Alias for record_audit."""
+        return self.record_audit(
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            details=payload,
+            correlation_id=correlation_id,
+        )
+
     def admit_operation(
         self,
         operation_type: str,

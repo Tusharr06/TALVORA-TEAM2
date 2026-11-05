@@ -3,7 +3,7 @@
 Exposes inspectable background task status, controlled retry, and cancellation.
 """
 
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from talvora.config import Settings
 from talvora.modules.operations.api.dto import OperationResponse
 from talvora.modules.operations.application.service import OperationService
-from talvora.shared.application.actor import ActorContext
 from talvora.shared.infrastructure.uow import unit_of_work
 from talvora.shared.transport.problems import ProblemException
 
@@ -22,24 +21,31 @@ def get_operation_service() -> OperationService:
     return OperationService()
 
 
-def get_current_actor(
+def resolve_actor_tenant_id(
     request: Request,
     x_tenant_id: UUID | None = Header(default=None, alias="X-Tenant-ID"),
-    x_user_id: UUID | None = Header(default=None, alias="X-User-ID"),
-) -> ActorContext:
-    """Extracts actor context from session or verified headers in dev/test."""
-    # In P02 foundation, tenant is resolved via session or authenticated header
-    tenant_id = x_tenant_id
-    if not tenant_id:
-        raise ProblemException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            title="Authentication Required",
-            code="AUTH_REQUIRED",
-            detail="Active tenant context is required to query operations.",
-        )
-    return ActorContext(
-        principal=None,
-        membership=None,  # Full membership RBAC will be plugged in P03
+) -> UUID:
+    """Extracts active tenant ID from authenticated session or header."""
+    actor = getattr(request.state, "actor", None)
+    if actor is not None and actor.tenant_id is not None:
+        return cast(UUID, actor.tenant_id)
+
+    from talvora.modules.identity.api.dependencies import get_current_actor_optional
+
+    settings = getattr(request.app.state, "settings", None)
+    if settings is not None:
+        actor_opt = get_current_actor_optional(request, settings)
+        if actor_opt is not None and actor_opt.tenant_id is not None:
+            return actor_opt.tenant_id
+
+    if x_tenant_id is not None:
+        return x_tenant_id
+
+    raise ProblemException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        title="Authentication Required",
+        code="AUTH_REQUIRED",
+        detail="Active tenant context is required to query operations.",
     )
 
 
@@ -52,13 +58,13 @@ def get_current_actor(
 async def get_operation(
     operation_id: UUID,
     request: Request,
-    x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
+    tenant_id: UUID = Depends(resolve_actor_tenant_id),
     service: OperationService = Depends(get_operation_service),
 ) -> OperationResponse:
     """Retrieves current execution status, timings, result, and errors for a task."""
     db_manager = request.app.state.db_manager
-    with unit_of_work(db_manager.session_maker, tenant_id=x_tenant_id) as uow:
-        op = service.get_operation(uow.session, x_tenant_id, operation_id)
+    with unit_of_work(db_manager.session_maker, tenant_id=tenant_id) as uow:
+        op = service.get_operation(uow.session, tenant_id, operation_id)
         return OperationResponse(
             operation_id=op.id,
             tenant_id=op.tenant_id,
@@ -83,13 +89,14 @@ async def get_operation(
 async def retry_operation(
     operation_id: UUID,
     request: Request,
-    x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
+    tenant_id: UUID = Depends(resolve_actor_tenant_id),
     x_user_id: UUID | None = Header(default=None, alias="X-User-ID"),
     service: OperationService = Depends(get_operation_service),
 ) -> OperationResponse:
     """Re-enqueues a failed or retry-waiting operation for execution."""
     db_manager = request.app.state.db_manager
-    with unit_of_work(db_manager.session_maker, tenant_id=x_tenant_id, subject_id=x_user_id) as uow:
+    user_id = getattr(getattr(request.state, "actor", None), "user_id", x_user_id)
+    with unit_of_work(db_manager.session_maker, tenant_id=tenant_id, subject_id=user_id) as uow:
         op = service.retry_operation(uow, operation_id)
         return OperationResponse(
             operation_id=op.id,
@@ -115,13 +122,14 @@ async def retry_operation(
 async def cancel_operation(
     operation_id: UUID,
     request: Request,
-    x_tenant_id: UUID = Header(..., alias="X-Tenant-ID"),
+    tenant_id: UUID = Depends(resolve_actor_tenant_id),
     x_user_id: UUID | None = Header(default=None, alias="X-User-ID"),
     service: OperationService = Depends(get_operation_service),
 ) -> OperationResponse:
     """Cancels a pending or retry-waiting operation before execution."""
     db_manager = request.app.state.db_manager
-    with unit_of_work(db_manager.session_maker, tenant_id=x_tenant_id, subject_id=x_user_id) as uow:
+    user_id = getattr(getattr(request.state, "actor", None), "user_id", x_user_id)
+    with unit_of_work(db_manager.session_maker, tenant_id=tenant_id, subject_id=user_id) as uow:
         op = service.cancel_operation(uow, operation_id)
         return OperationResponse(
             operation_id=op.id,

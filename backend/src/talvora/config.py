@@ -68,10 +68,21 @@ class Settings(BaseSettings):
     # --- Security & Cookies ---
     cookie_secure: bool = Field(default=False)
     session_cookie_name: str = Field(default="talvora_session")
+    session_idle_timeout_minutes: int = Field(default=30)
+    session_absolute_timeout_hours: int = Field(default=8)
     csrf_secret: str = Field(
         default="local-development-csrf-secret-change-in-production-min32chars"
     )
     encryption_key: str = Field(default="local-dev-aes-encryption-key-32bytes-long!")
+    allowed_redirect_hosts: list[str] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
+    )
+
+    # --- System Mail ---
+    mail_from_address: str = Field(default="system@talvora.local")
+    mail_provider: str = Field(default="mailpit")
+    mailpit_host: str = Field(default="localhost")
+    mailpit_port: int = Field(default=1025)
 
     # --- Diagnostics & Internal Surfaces ---
     internal_metrics_enabled: bool = Field(default=True)

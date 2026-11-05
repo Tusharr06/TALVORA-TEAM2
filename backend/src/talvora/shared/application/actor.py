@@ -60,6 +60,12 @@ class ActorContext:
         return self.candidate_link is not None
 
     @property
+    def user_id(self) -> UUID:
+        if self.principal is None:
+            raise ValueError("ActorContext has no authenticated principal.")
+        return self.principal.user_id
+
+    @property
     def tenant_id(self) -> UUID | None:
         return self.membership.organization_id if self.membership else None
 
