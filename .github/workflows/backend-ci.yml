@@ -1,0 +1,83 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, "feature/*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-checks:
+    name: Backend Lint, Typecheck & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: talvora
+          POSTGRES_PASSWORD: talvora_local_dev
+          POSTGRES_DB: talvora_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TALVORA_ENVIRONMENT: test
+      TALVORA_DEBUG: "false"
+      TALVORA_DATABASE_URL: "postgresql+psycopg://talvora:talvora_local_dev@localhost:5432/talvora_db"
+      AWS_ACCESS_KEY_ID: "mock_test_key"
+      AWS_SECRET_ACCESS_KEY: "mock_test_secret"
+      AWS_DEFAULT_REGION: "us-east-1"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+
+      - name: Ruff Lint & Format Check
+        working-directory: ./backend
+        run: |
+          uv run ruff check src/ tests/
+          uv run ruff format --check src/ tests/
+
+      - name: Mypy Strict Typecheck
+        working-directory: ./backend
+        run: |
+          uv run mypy src/ tests/
+
+      - name: Run Pytest Suite
+        working-directory: ./backend
+        run: |
+          uv run pytest -v
+
+      - name: Verify OpenAPI Schema Export
+        working-directory: ./backend
+        run: |
+          uv run python -c "
+          from talvora.bootstrap import create_app
+          import json
+          app = create_app()
+          schema = app.openapi()
+          assert 'openapi' in schema
+          print(f'OpenAPI schema verified successfully. Version: {schema[\"openapi\"]}')
+          "

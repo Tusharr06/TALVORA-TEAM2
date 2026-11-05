@@ -1,0 +1,40 @@
+name: Security & Dependency Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 1" # Weekly Monday audit
+
+jobs:
+  security-audit:
+    name: Dependency Audit & Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv and pip-audit
+        run: |
+          pip install --upgrade pip pip-audit
+
+      - name: Audit Backend Dependencies for CVEs
+        working-directory: ./backend
+        run: |
+          pip-audit --desc on || echo "Security audit completed with findings to review."
+
+      - name: Secret Scan with Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

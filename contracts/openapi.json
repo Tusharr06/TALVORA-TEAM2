@@ -1,0 +1,168 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Talvora Talent Operations API",
+    "description": "Enterprise Talent Operations Workspace backend for intelligent recruitment workflows.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness Probe",
+        "description": "Unauthenticated liveness probe.\n\nIndicates the FastAPI application process is alive and accepting connections.\nDoes NOT depend on external database, cloud, or AI availability.",
+        "operationId": "check_liveness",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Readiness Probe",
+        "description": "Readiness probe checking core database and dependency availability.\n\nReturns HTTP 200 when core database is healthy.\nReturns HTTP 503 if core relational persistence is unreachable.\nOptional integrations appear as degraded capabilities rather than taking down the service.",
+        "operationId": "check_readiness",
+        "responses": {
+          "200": {
+            "description": "Service is ready to handle traffic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Core dependencies are unavailable"
+          }
+        }
+      }
+    },
+    "/internal/diagnostic": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "summary": "Internal Diagnostic Surface",
+        "description": "Non-production diagnostic route for runtime verification.\n\nActive strictly in local or test environments. Returns 404 in staging/production.",
+        "operationId": "get_internal_diagnostic",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Get Internal Diagnostic"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ComponentHealth": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Name of the component"
+          },
+          "healthy": {
+            "type": "boolean",
+            "title": "Healthy",
+            "description": "Whether the component is operational"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Detailed status message"
+          },
+          "latency_ms": {
+            "type": "number",
+            "title": "Latency Ms",
+            "description": "Health check round-trip latency in milliseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "healthy",
+          "status",
+          "latency_ms"
+        ],
+        "title": "ComponentHealth"
+      },
+      "HealthStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Overall service health: healthy, degraded, or unhealthy"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service name"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Active environment"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentHealth"
+            },
+            "type": "array",
+            "title": "Components"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "environment"
+        ],
+        "title": "HealthStatusResponse"
+      },
+      "LivenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "alive"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "Service name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "service"
+        ],
+        "title": "LivenessResponse"
+      }
+    }
+  }
+}

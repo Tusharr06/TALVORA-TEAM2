@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: talvora-postgres
+    environment:
+      POSTGRES_USER: talvora
+      POSTGRES_PASSWORD: talvora_local_dev
+      POSTGRES_DB: talvora_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talvora -d talvora_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  moto:
+    image: motoserver/moto:latest
+    container_name: talvora-moto
+    ports:
+      - "5000:5000"
+    environment:
+      - MOTO_PORT=5000
+      - TEST_SERVER_MODE=true
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: talvora-mailpit
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+
+  clamav:
+    image: clamav/clamav:stable_base
+    container_name: talvora-clamav
+    ports:
+      - "3310:3310" # clamd TCP daemon port
+
+volumes:
+  postgres_data:
