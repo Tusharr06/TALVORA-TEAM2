@@ -33,9 +33,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         service_name=settings.service_name,
     )
 
-    # Initialize Database manager
-    db_manager = DatabaseManager(settings)
-    app.state.db_manager = db_manager
+    # Initialize Database manager if not already present
+    db_manager: DatabaseManager | None = getattr(app.state, "db_manager", None)
+    if db_manager is None:
+        db_manager = DatabaseManager(settings)
+        app.state.db_manager = db_manager
 
     # Register health checkers
     app.state.health_checkers = [
@@ -63,8 +65,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Attach settings to application state
+    # Attach settings and db manager to application state
     app.state.settings = effective_settings
+    app.state.db_manager = DatabaseManager(effective_settings)
 
     # 1. Register RFC 7807 problem exception handlers
     register_exception_handlers(app)
@@ -98,7 +101,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # 3. Register Core Routers
     from talvora.main import router as core_router
+    from talvora.modules.operations.api.routes import router as operations_router
 
     app.include_router(core_router)
+    app.include_router(operations_router)
 
     return app

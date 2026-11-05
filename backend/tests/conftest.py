@@ -5,6 +5,11 @@ from collections.abc import AsyncGenerator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+# Ensure all domain models are registered in Base.metadata for tests
+import talvora.modules.audit.domain.models  # noqa: F401
+import talvora.modules.identity.domain.models  # noqa: F401
+import talvora.modules.operations.domain.models  # noqa: F401
+import talvora.modules.organizations.domain.models  # noqa: F401
 from talvora.bootstrap import create_app
 from talvora.config import Settings
 from talvora.shared.domain.clock import FrozenClock
