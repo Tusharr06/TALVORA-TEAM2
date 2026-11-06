@@ -71,6 +71,7 @@ class UnitOfWork:
 
     def __enter__(self) -> "UnitOfWork":
         self._inject_transaction_context()
+        self._committed = False
         return self
 
     def __exit__(
@@ -130,6 +131,7 @@ class UnitOfWork:
         action: str,
         resource_type: str,
         resource_id: UUID | None = None,
+        actor_id: UUID | None = None,
         payload: dict[str, Any] | None = None,
         correlation_id: str | None = None,
     ) -> AuditEvent:
@@ -138,9 +140,32 @@ class UnitOfWork:
             action=action,
             resource_type=resource_type,
             resource_id=resource_id,
+            actor_id=actor_id,
             details=payload,
             correlation_id=correlation_id,
         )
+
+    def record_outbox_event(
+        self,
+        topic: str,
+        payload_ref: UUID,
+        correlation_id: str | None = None,
+    ) -> OutboxEvent:
+        """Record an outbox event in the current transaction."""
+        if not self.tenant_id:
+            raise ValueError("Cannot record outbox event without active tenant_id.")
+
+        outbox_entry = OutboxEvent(
+            id=uuid4(),
+            tenant_id=self.tenant_id,
+            topic=topic,
+            payload_ref=payload_ref,
+            correlation_id=correlation_id,
+            status=OutboxStatus.PENDING.value,
+            created_at=self.clock.now(),
+        )
+        self.session.add(outbox_entry)
+        return outbox_entry
 
     def admit_operation(
         self,

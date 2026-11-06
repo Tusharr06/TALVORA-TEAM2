@@ -42,6 +42,10 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "membership_invitation" in tables
         assert "team" in tables
         assert "team_member" in tables
+        assert "job" in tables
+        assert "job_assignment" in tables
+        assert "requirement_version" in tables
+        assert "criterion" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -55,6 +59,8 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "job_operation" not in remaining_tables
         assert "auth_session" not in remaining_tables
         assert "team" not in remaining_tables
+        assert "job" not in remaining_tables
+        assert "criterion" not in remaining_tables
         fresh_engine.dispose()
 
     finally:

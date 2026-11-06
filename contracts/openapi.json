@@ -418,16 +418,6 @@
         "operationId": "update_member_role_api_v1_organizations__id__members__user_id__patch",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          },
-          {
             "name": "user_id",
             "in": "path",
             "required": true,
@@ -435,6 +425,16 @@
               "type": "string",
               "format": "uuid",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
             }
           }
         ],
@@ -480,16 +480,6 @@
         "operationId": "remove_member_api_v1_organizations__id__members__user_id__delete",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          },
-          {
             "name": "user_id",
             "in": "path",
             "required": true,
@@ -497,6 +487,16 @@
               "type": "string",
               "format": "uuid",
               "title": "User Id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
             }
           }
         ],
@@ -1203,6 +1203,779 @@
           }
         }
       }
+    },
+    "/api/v1/jobs": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "List Jobs",
+        "description": "List job vacancies with filtering, cursor pagination, and allowlisted sorting.",
+        "operationId": "list_jobs_api_v1_jobs_get",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/JobStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "created_at",
+              "title": "Sort By"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "desc",
+              "title": "Sort Order"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Create Job",
+        "description": "Create a new vacancy in DRAFT status. Grants creator appropriate job assignment.",
+        "operationId": "create_job_api_v1_jobs_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Get Job",
+        "description": "Fetch details of a single job vacancy.",
+        "operationId": "get_job_api_v1_jobs__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Update Job",
+        "description": "Update mutable draft criteria or safe vacancy metadata with optimistic locking.",
+        "operationId": "update_job_api_v1_jobs__id__patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/requirement-versions": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Update Draft Requirements",
+        "description": "Save or update draft requirement criteria on a vacancy.",
+        "operationId": "update_draft_requirements_api_v1_jobs__id__requirement_versions_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDraftRequirementsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Get Requirement Versions",
+        "description": "List all published immutable requirement versions for a job.",
+        "operationId": "get_requirement_versions_api_v1_jobs__id__requirement_versions_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequirementVersionResponse"
+                  },
+                  "title": "Response Get Requirement Versions Api V1 Jobs  Id  Requirement Versions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/requirement-versions/{version_number}": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Get Requirement Version",
+        "description": "Fetch an exact published requirement version snapshot and its immutable criteria.",
+        "operationId": "get_requirement_version_api_v1_jobs__id__requirement_versions__version_number__get",
+        "parameters": [
+          {
+            "name": "version_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Version Number"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementVersionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/publish": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Publish Requirements",
+        "description": "Snapshot and publish draft criteria into a new immutable requirement version.",
+        "operationId": "publish_requirements_api_v1_jobs__id__publish_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishRequirementsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementVersionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/status-transitions": {
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Transition Job Status",
+        "description": "Transition job lifecycle status (DRAFT, OPEN, PAUSED, CLOSED).",
+        "operationId": "transition_job_status_api_v1_jobs__id__status_transitions_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusTransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/assignments": {
+      "get": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "List Job Assignments",
+        "description": "List all staff assignments on a job vacancy.",
+        "operationId": "list_job_assignments_api_v1_jobs__id__assignments_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobAssignmentResponse"
+                  },
+                  "title": "Response List Job Assignments Api V1 Jobs  Id  Assignments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Assign Job Member",
+        "description": "Assign a team member to a vacancy role (HIRING_MANAGER, RECRUITER, INTERVIEWER).",
+        "operationId": "assign_job_member_api_v1_jobs__id__assignments_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAssignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/assignments/{user_id}": {
+      "delete": {
+        "tags": [
+          "Jobs"
+        ],
+        "summary": "Remove Job Assignment",
+        "description": "Remove a member's assignment from a vacancy.",
+        "operationId": "remove_job_assignment_api_v1_jobs__id__assignments__user_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/JobRole"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1236,6 +2009,78 @@
         ],
         "title": "AddTeamMemberRequest",
         "description": "Payload to assign a member to a team."
+      },
+      "AssignMemberRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/JobRole"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "user_id",
+          "role"
+        ],
+        "title": "AssignMemberRequest",
+        "description": "Payload to assign a member to a vacancy role."
+      },
+      "CertificationPresentConfig": {
+        "properties": {
+          "criterion_type": {
+            "type": "string",
+            "const": "CERTIFICATION_PRESENT",
+            "title": "Criterion Type",
+            "default": "CERTIFICATION_PRESENT"
+          },
+          "certification_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Certification Name"
+          },
+          "issuing_organization": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuing Organization"
+          },
+          "allow_expired": {
+            "type": "boolean",
+            "title": "Allow Expired",
+            "default": false
+          },
+          "max_age_months": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Age Months"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "certification_name"
+        ],
+        "title": "CertificationPresentConfig",
+        "description": "Configuration for CERTIFICATION_PRESENT criterion."
       },
       "ComponentHealth": {
         "properties": {
@@ -1291,6 +2136,97 @@
         "title": "CreateInvitationRequest",
         "description": "Payload to invite a new member."
       },
+      "CreateJobRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Description"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "employment_type": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Employment Type",
+            "default": "FULL_TIME"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "hiring_manager_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hiring Manager Id"
+          },
+          "draft_requirements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CriterionDraft"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Requirements"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "description"
+        ],
+        "title": "CreateJobRequest",
+        "description": "Payload to create a new job vacancy."
+      },
       "CreateOrganizationRequest": {
         "properties": {
           "name": {
@@ -1341,6 +2277,194 @@
         "title": "CreateTeamRequest",
         "description": "Payload to create a hiring team."
       },
+      "CriterionDraft": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "criterion_type": {
+            "$ref": "#/components/schemas/CriterionType"
+          },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required",
+            "description": "True for mandatory qualification, False for preferred",
+            "default": true
+          },
+          "source_requirement_text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Source Requirement Text"
+          },
+          "relevance_rationale": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Relevance Rationale"
+          },
+          "requires_human_review": {
+            "type": "boolean",
+            "title": "Requires Human Review",
+            "description": "Must be explicitly True for MANUAL_REQUIREMENT criteria",
+            "default": false
+          },
+          "competency_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competency Reference"
+          },
+          "configuration": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SkillPresentConfig"
+              },
+              {
+                "$ref": "#/components/schemas/MinExperienceMonthsConfig"
+              },
+              {
+                "$ref": "#/components/schemas/EducationLevelConfig"
+              },
+              {
+                "$ref": "#/components/schemas/CertificationPresentConfig"
+              },
+              {
+                "$ref": "#/components/schemas/ManualRequirementConfig"
+              }
+            ],
+            "title": "Configuration",
+            "discriminator": {
+              "propertyName": "criterion_type",
+              "mapping": {
+                "CERTIFICATION_PRESENT": "#/components/schemas/CertificationPresentConfig",
+                "EDUCATION_LEVEL": "#/components/schemas/EducationLevelConfig",
+                "MANUAL_REQUIREMENT": "#/components/schemas/ManualRequirementConfig",
+                "MIN_EXPERIENCE_MONTHS": "#/components/schemas/MinExperienceMonthsConfig",
+                "SKILL_PRESENT": "#/components/schemas/SkillPresentConfig"
+              }
+            }
+          },
+          "equivalence_rules": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equivalence Rules"
+          },
+          "order_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Order Index",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "criterion_type",
+          "source_requirement_text",
+          "relevance_rationale",
+          "configuration"
+        ],
+        "title": "CriterionDraft",
+        "description": "A typed criterion item inside a draft or publication request."
+      },
+      "CriterionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "criterion_type": {
+            "$ref": "#/components/schemas/CriterionType"
+          },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required"
+          },
+          "source_requirement_text": {
+            "type": "string",
+            "title": "Source Requirement Text"
+          },
+          "relevance_rationale": {
+            "type": "string",
+            "title": "Relevance Rationale"
+          },
+          "requires_human_review": {
+            "type": "boolean",
+            "title": "Requires Human Review"
+          },
+          "competency_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competency Reference"
+          },
+          "configuration": {
+            "type": "object",
+            "title": "Configuration"
+          },
+          "equivalence_rules": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equivalence Rules"
+          },
+          "order_index": {
+            "type": "integer",
+            "title": "Order Index"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "criterion_type",
+          "is_required",
+          "source_requirement_text",
+          "relevance_rationale",
+          "requires_human_review",
+          "configuration",
+          "order_index"
+        ],
+        "title": "CriterionResponse",
+        "description": "Individual criterion in an immutable requirement version."
+      },
+      "CriterionType": {
+        "type": "string",
+        "enum": [
+          "SKILL_PRESENT",
+          "MIN_EXPERIENCE_MONTHS",
+          "EDUCATION_LEVEL",
+          "CERTIFICATION_PRESENT",
+          "MANUAL_REQUIREMENT"
+        ],
+        "title": "CriterionType",
+        "description": "Fixed supported criterion types."
+      },
       "CsrfResponse": {
         "properties": {
           "csrf_token": {
@@ -1354,6 +2478,63 @@
         ],
         "title": "CsrfResponse",
         "description": "Session anti-CSRF token response."
+      },
+      "DegreeLevel": {
+        "type": "string",
+        "enum": [
+          "HIGH_SCHOOL",
+          "ASSOCIATES",
+          "BACHELORS",
+          "MASTERS",
+          "DOCTORATE",
+          "PROFESSIONAL"
+        ],
+        "title": "DegreeLevel",
+        "description": "Explicit, hierarchical educational attainment levels."
+      },
+      "EducationLevelConfig": {
+        "properties": {
+          "criterion_type": {
+            "type": "string",
+            "const": "EDUCATION_LEVEL",
+            "title": "Criterion Type",
+            "default": "EDUCATION_LEVEL"
+          },
+          "minimum_degree": {
+            "$ref": "#/components/schemas/DegreeLevel"
+          },
+          "acceptable_fields_of_study": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Acceptable Fields Of Study"
+          },
+          "allow_equivalent_experience": {
+            "type": "boolean",
+            "title": "Allow Equivalent Experience",
+            "default": false
+          },
+          "equivalent_experience_months": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equivalent Experience Months"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "minimum_degree"
+        ],
+        "title": "EducationLevelConfig",
+        "description": "Configuration for EDUCATION_LEVEL criterion."
       },
       "HTTPValidationError": {
         "properties": {
@@ -1448,6 +2629,266 @@
         "title": "InvitationResponse",
         "description": "Invitation details response."
       },
+      "JobAssignmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/JobRole"
+          },
+          "assigned_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Assigned By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "job_id",
+          "user_id",
+          "role",
+          "assigned_by",
+          "created_at"
+        ],
+        "title": "JobAssignmentResponse",
+        "description": "Details of a member assignment on a job."
+      },
+      "JobListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_count"
+        ],
+        "title": "JobListResponse",
+        "description": "Cursor-paginated list of job vacancies."
+      },
+      "JobResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "employment_type": {
+            "type": "string",
+            "title": "Employment Type"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "creator_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Creator Id"
+          },
+          "hiring_manager_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hiring Manager Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "closed_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed Reason"
+          },
+          "current_published_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Published Version Id"
+          },
+          "current_published_version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Published Version Number"
+          },
+          "draft_requirements": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Requirements"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "title",
+          "description",
+          "employment_type",
+          "creator_id",
+          "status",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "JobResponse",
+        "description": "Complete detail response for a job vacancy."
+      },
+      "JobRole": {
+        "type": "string",
+        "enum": [
+          "HIRING_MANAGER",
+          "RECRUITER",
+          "INTERVIEWER"
+        ],
+        "title": "JobRole",
+        "description": "Specific role assigned to a user for a given job."
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "OPEN",
+          "PAUSED",
+          "CLOSED"
+        ],
+        "title": "JobStatus",
+        "description": "Lifecycle statuses for a job vacancy."
+      },
       "LivenessResponse": {
         "properties": {
           "status": {
@@ -1481,6 +2922,54 @@
         ],
         "title": "LoginResponse",
         "description": "OIDC authorization redirect response."
+      },
+      "ManualRequirementConfig": {
+        "properties": {
+          "criterion_type": {
+            "type": "string",
+            "const": "MANUAL_REQUIREMENT",
+            "title": "Criterion Type",
+            "default": "MANUAL_REQUIREMENT"
+          },
+          "human_verification_prompt": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 5,
+            "title": "Human Verification Prompt",
+            "description": "Explicit description of the human verification task required"
+          },
+          "guidelines": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guidelines"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "human_verification_prompt"
+        ],
+        "title": "ManualRequirementConfig",
+        "description": "Configuration for MANUAL_REQUIREMENT criterion requiring human verification."
       },
       "MeResponse": {
         "properties": {
@@ -1579,6 +3068,57 @@
         ],
         "title": "MemberResponse",
         "description": "Organization member response."
+      },
+      "MinExperienceMonthsConfig": {
+        "properties": {
+          "criterion_type": {
+            "type": "string",
+            "const": "MIN_EXPERIENCE_MONTHS",
+            "title": "Criterion Type",
+            "default": "MIN_EXPERIENCE_MONTHS"
+          },
+          "min_months": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Min Months",
+            "description": "Minimum experience required in whole calendar months (>0)"
+          },
+          "relevant_titles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Relevant Titles",
+            "description": "Explicit role titles in scope"
+          },
+          "relevant_skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Relevant Skills",
+            "description": "Relevant skills in scope"
+          },
+          "equivalence_policy": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equivalence Policy",
+            "description": "Versioned equivalence policy for substituting degrees or adjacent roles"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "min_months"
+        ],
+        "title": "MinExperienceMonthsConfig",
+        "description": "Configuration for MIN_EXPERIENCE_MONTHS criterion."
       },
       "OperationResponse": {
         "properties": {
@@ -1713,6 +3253,201 @@
         "title": "OrganizationResponse",
         "description": "Organization summary with caller's membership role."
       },
+      "PublishRequirementsRequest": {
+        "properties": {
+          "change_summary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Summary"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PublishRequirementsRequest",
+        "description": "Payload to snapshot and publish draft requirements."
+      },
+      "RequirementVersionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "version_number": {
+            "type": "integer",
+            "title": "Version Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "published_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Published By"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          },
+          "change_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Summary"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionResponse"
+            },
+            "type": "array",
+            "title": "Criteria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "job_id",
+          "version_number",
+          "title",
+          "description",
+          "published_by",
+          "published_at"
+        ],
+        "title": "RequirementVersionResponse",
+        "description": "Snapshot of a published requirement version."
+      },
+      "SkillPresentConfig": {
+        "properties": {
+          "criterion_type": {
+            "type": "string",
+            "const": "SKILL_PRESENT",
+            "title": "Criterion Type",
+            "default": "SKILL_PRESENT"
+          },
+          "skill_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Skill Name"
+          },
+          "canonical_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Name"
+          },
+          "synonyms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Synonyms"
+          },
+          "min_proficiency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Proficiency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "skill_name"
+        ],
+        "title": "SkillPresentConfig",
+        "description": "Configuration for SKILL_PRESENT criterion."
+      },
+      "StatusTransitionRequest": {
+        "properties": {
+          "target_status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target_status"
+        ],
+        "title": "StatusTransitionRequest",
+        "description": "Payload to transition job lifecycle status."
+      },
       "TeamResponse": {
         "properties": {
           "id": {
@@ -1764,6 +3499,142 @@
         ],
         "title": "TransferOwnershipRequest",
         "description": "Payload to transfer organization ownership."
+      },
+      "UpdateDraftRequirementsRequest": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionDraft"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Criteria"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "criteria"
+        ],
+        "title": "UpdateDraftRequirementsRequest",
+        "description": "Payload to update draft criteria for a job."
+      },
+      "UpdateJobRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "employment_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Type"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "draft_requirements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CriterionDraft"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Requirements"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "UpdateJobRequest",
+        "description": "Payload to update mutable draft and metadata on a job."
       },
       "UpdateMemberRoleRequest": {
         "properties": {

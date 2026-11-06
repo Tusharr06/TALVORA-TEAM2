@@ -25,6 +25,11 @@ class Capability(StrEnum):
     VIEW_MEMBERS = "VIEW_MEMBERS"
     VIEW_TEAMS = "VIEW_TEAMS"
     CREATE_JOB = "CREATE_JOB"
+    VIEW_JOBS = "VIEW_JOBS"
+    EDIT_JOB = "EDIT_JOB"
+    PUBLISH_JOB_REQUIREMENTS = "PUBLISH_JOB_REQUIREMENTS"
+    MANAGE_JOB_ASSIGNMENTS = "MANAGE_JOB_ASSIGNMENTS"
+    TRANSITION_JOB_STATUS = "TRANSITION_JOB_STATUS"
     READ_APPLICATION = "READ_APPLICATION"
     TRANSITION_STAGE = "TRANSITION_STAGE"
     APPROVE_SCHEDULING = "APPROVE_SCHEDULING"
@@ -44,6 +49,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
             Capability.CREATE_JOB.value,
+            Capability.VIEW_JOBS.value,
+            Capability.EDIT_JOB.value,
+            Capability.PUBLISH_JOB_REQUIREMENTS.value,
+            Capability.MANAGE_JOB_ASSIGNMENTS.value,
+            Capability.TRANSITION_JOB_STATUS.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -59,6 +69,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
             Capability.CREATE_JOB.value,
+            Capability.VIEW_JOBS.value,
+            Capability.MANAGE_JOB_ASSIGNMENTS.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -71,6 +83,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
             Capability.CREATE_JOB.value,
+            Capability.VIEW_JOBS.value,
+            Capability.EDIT_JOB.value,
+            Capability.PUBLISH_JOB_REQUIREMENTS.value,
+            Capability.MANAGE_JOB_ASSIGNMENTS.value,
+            Capability.TRANSITION_JOB_STATUS.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -82,6 +99,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
             Capability.CREATE_JOB.value,
+            Capability.VIEW_JOBS.value,
+            Capability.EDIT_JOB.value,
+            Capability.PUBLISH_JOB_REQUIREMENTS.value,
+            Capability.MANAGE_JOB_ASSIGNMENTS.value,
+            Capability.TRANSITION_JOB_STATUS.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -92,6 +114,7 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
         {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
+            Capability.VIEW_JOBS.value,
             Capability.READ_APPLICATION.value,
             Capability.SUBMIT_FEEDBACK.value,
         }
