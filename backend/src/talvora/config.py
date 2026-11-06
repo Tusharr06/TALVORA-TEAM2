@@ -110,6 +110,12 @@ class Settings(BaseSettings):
     google_redirect_uri: str = Field(
         default="http://localhost:8000/api/v1/integrations/google/callback"
     )
+    google_auth_endpoint: str = Field(default="https://accounts.google.com/o/oauth2/v2/auth")
+    google_token_endpoint: str = Field(default="https://oauth2.googleapis.com/token")
+    google_userinfo_endpoint: str = Field(
+        default="https://openidconnect.googleapis.com/v1/userinfo"
+    )
+    google_revoke_endpoint: str = Field(default="https://oauth2.googleapis.com/revoke")
     allow_mock_google_adapter: bool = Field(default=True)
 
     # --- System Mail ---

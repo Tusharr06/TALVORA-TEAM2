@@ -217,8 +217,9 @@ class IntegrationService:
             ),
             uow.session,
         )
-        existing_conn = uow.session.scalar(conn_stmt)
+        existing_conn: IntegrationConnection | None = uow.session.scalar(conn_stmt)
 
+        connection: IntegrationConnection
         if existing_conn:
             # Reconnection: If Google omitted refresh token, PRESERVE the existing valid refresh token
             if not enc_refresh and existing_conn.encrypted_refresh_token:
@@ -314,7 +315,7 @@ class IntegrationService:
             ),
             uow.session,
         )
-        conn = uow.session.scalar(stmt)
+        conn: IntegrationConnection | None = uow.session.scalar(stmt)
         if conn is None:
             raise IntegrationError(
                 status_code=404,

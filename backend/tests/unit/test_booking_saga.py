@@ -84,6 +84,7 @@ def _seed_prerequisites(
     job_status: str = JobStatus.OPEN.value,
 ) -> tuple[Candidate, Job, Application, InterviewRequest, SlotProposal, Membership]:
     now = datetime.now(UTC)
+    assert actor.membership is not None
 
     # 1. Org and Recruiter Membership
     org = Organization(
@@ -226,6 +227,7 @@ async def test_draft_external_action_create_interview_success(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)
@@ -252,6 +254,7 @@ async def test_draft_action_fails_if_candidate_unverified(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(
@@ -277,6 +280,7 @@ async def test_draft_action_fails_if_application_not_interview_approved(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(
@@ -302,6 +306,7 @@ async def test_approve_external_action_and_execute_booking_saga_success(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, int_mem = _seed_prerequisites(session, tenant_id, actor)
@@ -352,6 +357,7 @@ async def test_approve_external_action_and_execute_booking_saga_success(
 async def test_approve_fails_on_payload_tampering(session_factory: sessionmaker[Session]) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)
@@ -389,6 +395,7 @@ async def test_booking_saga_blocks_on_fresh_freebusy_conflict(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, int_mem = _seed_prerequisites(session, tenant_id, actor)
@@ -438,6 +445,7 @@ async def test_booking_saga_timeout_enters_unknown_and_preserves_reservations(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)
@@ -483,6 +491,7 @@ async def test_booking_saga_timeout_enters_unknown_and_preserves_reservations(
 async def test_resolve_unknown_action_force_release(session_factory: sessionmaker[Session]) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, int_mem = _seed_prerequisites(session, tenant_id, actor)
@@ -544,6 +553,7 @@ async def test_resolve_unknown_action_force_release(session_factory: sessionmake
 async def test_gmail_send_action_accepted(session_factory: sessionmaker[Session]) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)
@@ -585,6 +595,7 @@ async def test_gmail_send_action_unknown_never_blindly_retried(
 ) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)
@@ -628,6 +639,7 @@ async def test_gmail_send_action_unknown_never_blindly_retried(
 async def test_gmail_send_action_definitive_failure(session_factory: sessionmaker[Session]) -> None:
     tenant_id = uuid4()
     actor = _create_actor(tenant_id)
+    assert actor.membership is not None
 
     with session_factory() as session:
         cand, job, app, req, prop, _ = _seed_prerequisites(session, tenant_id, actor)

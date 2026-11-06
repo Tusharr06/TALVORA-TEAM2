@@ -850,7 +850,7 @@ class InterviewReservation(Base):
 
     id: Mapped[UUID] = mapped_column(nullable=False, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
-    interview_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    interview_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     interview_revision_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     membership_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
 
@@ -914,7 +914,7 @@ class Notification(Base):
 
     id: Mapped[UUID] = mapped_column(nullable=False, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
-    interview_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    interview_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     interview_revision_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
     external_action_id: Mapped[UUID | None] = mapped_column(nullable=True, index=True)
 

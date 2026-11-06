@@ -91,6 +91,7 @@ def _seed_booked_interview(
     actor: ActorContext,
 ) -> tuple[Interview, InterviewRevision, Candidate, str, SlotProposal, Membership]:
     now = datetime.now(UTC)
+    assert actor.membership is not None
 
     # 1. Org & Memberships
     org = Organization(
@@ -587,7 +588,9 @@ async def test_recruiter_cancellation_workflow_success(
                 calendar_provider=cal_provider,
             )
             assert approved_action.status == ExternalActionStatus.SUCCEEDED.value
+            assert cancelled_int is not None
             assert cancelled_int.status == InterviewStatus.CANCELLED.value
+            assert cancelled_int.completion_reason is not None
             assert "Position put on freeze." in cancelled_int.completion_reason
 
             # Check event removed from calendar
@@ -658,6 +661,7 @@ def test_human_completion_no_show_success(session_factory: sessionmaker[Session]
                 reason="Candidate did not connect to Google Meet after 15 minute wait.",
             )
             assert no_show_int.status == InterviewStatus.NO_SHOW.value
+            assert no_show_int.completion_reason is not None
             assert "15 minute wait" in no_show_int.completion_reason
 
 
@@ -695,6 +699,7 @@ async def test_reconciliation_detects_external_deletion(
                 calendar_provider=cal_provider,
             )
             assert reconciled.status == InterviewStatus.RECONCILIATION_REQUIRED.value
+            assert reconciled.reconciliation_reason is not None
             assert "deleted by the organizer" in reconciled.reconciliation_reason
 
 
@@ -727,6 +732,7 @@ async def test_reconciliation_detects_schedule_drift(
                 calendar_provider=cal_provider,
             )
             assert reconciled.status == InterviewStatus.RECONCILIATION_REQUIRED.value
+            assert reconciled.reconciliation_reason is not None
             assert "External schedule drift detected" in reconciled.reconciliation_reason
 
 

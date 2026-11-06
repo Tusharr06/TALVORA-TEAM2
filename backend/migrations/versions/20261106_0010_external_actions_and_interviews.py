@@ -284,7 +284,7 @@ def upgrade() -> None:
         "interview_reservation",
         sa.Column("id", sa.UUID(as_uuid=True), nullable=False),
         sa.Column("tenant_id", sa.UUID(as_uuid=True), nullable=False),
-        sa.Column("interview_id", sa.UUID(as_uuid=True), nullable=False),
+        sa.Column("interview_id", sa.UUID(as_uuid=True), nullable=True),
         sa.Column("interview_revision_id", sa.UUID(as_uuid=True), nullable=True),
         sa.Column("membership_id", sa.UUID(as_uuid=True), nullable=False),
         sa.Column("status", sa.String(50), nullable=False, server_default="ACTIVE"),

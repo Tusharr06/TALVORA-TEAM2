@@ -10,6 +10,7 @@ Covers:
 - Tenant isolation and member vs. administrator visibility policies
 """
 
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -63,7 +64,7 @@ TEST_KEY = "test-encryption-key-32-bytes-ok!"
 
 
 @pytest.fixture
-def db_session() -> Session:
+def db_session() -> Iterator[Session]:
     """In-memory SQLite session with all domain tables created."""
     engine = create_engine(
         "sqlite:///:memory:",
@@ -164,6 +165,7 @@ def test_initiate_google_authorization_generates_bound_state(
         )
         assert tx is not None
         assert tx.session_binding == "default_session"
+        assert actor.membership is not None
         assert tx.actor_membership_id == actor.membership.membership_id
         assert tx.consumed_at is None
         assert GoogleScope.CALENDAR_FREEBUSY.value in tx.requested_scopes
@@ -213,6 +215,7 @@ async def test_oauth_callback_success_encrypts_tokens_and_stores_connection(
         assert conn.encrypted_refresh_token != "google_secret_refresh_token_xyz"
 
         # Decryption must recover the original token inside boundary
+        assert conn.encrypted_refresh_token is not None
         decrypted_access = decrypt_token(conn.encrypted_access_token, TEST_KEY)
         decrypted_refresh = decrypt_token(conn.encrypted_refresh_token, TEST_KEY)
         assert decrypted_access == f"mock_access_{code}"
@@ -443,6 +446,7 @@ async def test_get_valid_access_token_uses_active_token_within_ttl(
             code="code_active",
         )
 
+        assert actor.membership is not None
         token, verified_email = await IntegrationService.get_valid_access_token(
             uow=uow,
             actor=actor,
@@ -488,6 +492,7 @@ async def test_get_valid_access_token_refreshes_when_expiring(
         conn.token_expiry = datetime.now(UTC) + timedelta(minutes=2)
         uow.session.flush()
 
+        assert actor.membership is not None
         refreshed_token, _ = await IntegrationService.get_valid_access_token(
             uow=uow,
             actor=actor,
@@ -536,6 +541,7 @@ async def test_get_valid_access_token_handles_invalid_grant_by_marking_revoked(
         uow.session.flush()
         oauth_client.simulate_invalid_grant = True
 
+        assert actor.membership is not None
         with pytest.raises(IntegrationReauthRequiredError):
             await IntegrationService.get_valid_access_token(
                 uow=uow,
@@ -845,7 +851,7 @@ def test_tenant_isolation_and_member_visibility(
             membership_id=mem_member.id,
             organization_id=tenant_a,
             role=Role.INTERVIEWER.value,
-            capabilities=[],
+            capabilities=frozenset(),
         ),
     )
     member_list = IntegrationService.list_integrations(uow=uow_a, actor=actor_member)
@@ -861,7 +867,7 @@ def test_tenant_isolation_and_member_visibility(
             membership_id=mem_admin.id,
             organization_id=tenant_a,
             role=Role.ADMIN.value,
-            capabilities=[],
+            capabilities=frozenset(),
         ),
     )
     admin_list = IntegrationService.list_integrations(uow=uow_a, actor=actor_admin)

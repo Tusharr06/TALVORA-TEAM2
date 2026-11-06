@@ -519,6 +519,28 @@ class BookingSagaService:
                 calendar_provider=calendar_provider,
                 encryption_key=encryption_key,
             )
+        elif action.action_type == ExternalActionType.RESCHEDULE_INTERVIEW.value:
+            from talvora.modules.scheduling.application.lifecycle_service import (
+                InterviewLifecycleService,
+            )
+
+            interview = await InterviewLifecycleService.execute_reschedule_saga(
+                uow=uow,
+                action=action,
+                approval=approval,
+                calendar_provider=calendar_provider,
+            )
+        elif action.action_type == ExternalActionType.CANCEL_INTERVIEW.value:
+            from talvora.modules.scheduling.application.lifecycle_service import (
+                InterviewLifecycleService,
+            )
+
+            interview = await InterviewLifecycleService.execute_cancellation_saga(
+                uow=uow,
+                action=action,
+                approval=approval,
+                calendar_provider=calendar_provider,
+            )
         elif (
             action.action_type == ExternalActionType.SEND_AVAILABILITY_REQUEST.value
             and gmail_provider is not None
@@ -589,12 +611,11 @@ class BookingSagaService:
 
         # Create HELD reservations for all required participants
         held_reservations: list[InterviewReservation] = []
-        dummy_interview_id = uuid4()
         for mem_id in interviewer_membership_ids:
             res = InterviewReservation(
                 id=uuid4(),
                 tenant_id=uow.tenant_id,
-                interview_id=dummy_interview_id,
+                interview_id=None,
                 interview_revision_id=None,
                 membership_id=mem_id,
                 status=InterviewReservationStatus.HELD.value,
