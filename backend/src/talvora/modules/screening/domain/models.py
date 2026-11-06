@@ -50,9 +50,7 @@ class ScreeningRun(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint("tenant_id", "id", name="pk_screening_run"),
-        CheckConstraint(
-            "outcome IN ('PASS', 'FAIL', 'UNKNOWN')", name="ck_screening_run_outcome"
-        ),
+        CheckConstraint("outcome IN ('PASS', 'FAIL', 'UNKNOWN')", name="ck_screening_run_outcome"),
         CheckConstraint("length(trim(rule_version)) > 0", name="ck_screening_run_rule_version"),
         CheckConstraint(
             "(application_document_id IS NULL) = (document_version_id IS NULL)",

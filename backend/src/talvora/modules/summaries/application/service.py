@@ -144,11 +144,13 @@ class SummaryService:
         )
         run, results, latest_override = ScreeningService.get_run(uow, actor, screening_run_id)
         application = uow.session.scalar(
-            select(Application).where(
+            select(Application)
+            .where(
                 Application.tenant_id == tenant_id,
                 Application.id == application_id,
                 Application.id == run.application_id,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if application is None or application.candidate_id != run.candidate_id:
             raise ProblemException(
@@ -158,10 +160,12 @@ class SummaryService:
                 detail="The screening run does not belong to this application.",
             )
         job = uow.session.scalar(
-            select(Job).where(
+            select(Job)
+            .where(
                 Job.tenant_id == tenant_id,
                 Job.id == application.job_id,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if job is None or job.current_published_version_id != run.requirement_version_id:
             raise ProblemException(
@@ -177,12 +181,9 @@ class SummaryService:
                 ApplicationDocument.status == ApplicationDocumentStatus.ACTIVE.value,
             )
         )
-        if (
-            (current_binding.id if current_binding else None) != run.application_document_id
-            or (
-                current_binding.document_version_id if current_binding else None
-            ) != run.document_version_id
-        ):
+        if (current_binding.id if current_binding else None) != run.application_document_id or (
+            current_binding.document_version_id if current_binding else None
+        ) != run.document_version_id:
             raise ProblemException(
                 status_code=409,
                 title="Screening Inputs Stale",
@@ -191,16 +192,20 @@ class SummaryService:
             )
 
         if draft_claims is None:
-            fact_ids = set(
-                uow.session.scalars(
-                    select(ScreeningResultFact.fact_revision_id).where(
-                        ScreeningResultFact.tenant_id == tenant_id,
-                        ScreeningResultFact.screening_result_id.in_(
-                            [result.id for result in results]
-                        ),
-                    )
-                ).all()
-            ) if results else set()
+            fact_ids = (
+                set(
+                    uow.session.scalars(
+                        select(ScreeningResultFact.fact_revision_id).where(
+                            ScreeningResultFact.tenant_id == tenant_id,
+                            ScreeningResultFact.screening_result_id.in_(
+                                [result.id for result in results]
+                            ),
+                        )
+                    ).all()
+                )
+                if results
+                else set()
+            )
             draft_claims = []
             for fact_id in sorted(fact_ids, key=str):
                 fact = cls._current_fact(uow, tenant_id, application.candidate_id, fact_id)
@@ -247,9 +252,8 @@ class SummaryService:
                     continue
                 fragment, _segment = evidence
                 text_is_supported = is_evidence_supported(fact.value, fragment.quote)
-                human_corrected = (
-                    fact.status == CandidateFactStatus.CORRECTED.value
-                    and bool(fact.review_note and fact.review_note.strip())
+                human_corrected = fact.status == CandidateFactStatus.CORRECTED.value and bool(
+                    fact.review_note and fact.review_note.strip()
                 )
                 if text_is_supported or human_corrected:
                     valid_evidence.append(fragment.id)

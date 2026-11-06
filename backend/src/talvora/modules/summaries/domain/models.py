@@ -48,9 +48,7 @@ class CandidateSummaryRevision(Base):
             "quality_status IN ('ACCEPTED', 'REJECTED')",
             name="ck_candidate_summary_quality_status",
         ),
-        CheckConstraint(
-            "revision_number >= 1", name="ck_candidate_summary_revision_positive"
-        ),
+        CheckConstraint("revision_number >= 1", name="ck_candidate_summary_revision_positive"),
         UniqueConstraint(
             "tenant_id",
             "application_id",

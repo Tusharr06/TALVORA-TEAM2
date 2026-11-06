@@ -22,9 +22,7 @@ from talvora.shared.infrastructure.uow import UnitOfWork
 router = APIRouter(prefix="/api/v1", tags=["Candidate Summaries"])
 
 
-def _response(
-    uow: UnitOfWork, summary_id: UUID, actor: ActorContext
-) -> CandidateSummaryResponse:
+def _response(uow: UnitOfWork, summary_id: UUID, actor: ActorContext) -> CandidateSummaryResponse:
     summary, claims = SummaryService.get_summary(uow, actor, summary_id)
     return CandidateSummaryResponse(
         id=summary.id,

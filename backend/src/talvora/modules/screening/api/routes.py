@@ -139,9 +139,7 @@ def override_screening(
     _csrf: None = Depends(enforce_csrf_and_origin),
 ) -> ScreeningRunResponse:
     with UnitOfWork(session=db, tenant_id=actor.tenant_id, subject_id=actor.user_id) as uow:
-        ScreeningService.override(
-            uow, actor, screening_run_id, payload.outcome, payload.reason
-        )
+        ScreeningService.override(uow, actor, screening_run_id, payload.outcome, payload.reason)
         response = _run_response(uow, screening_run_id, actor)
         uow.commit()
         return response

@@ -363,8 +363,10 @@ class CandidateFactService:
                 code="FACT_POLARITY_INVALID",
                 detail="A polarity change is only valid for a CORRECTED review.",
             )
-        value = current.value if status != CandidateFactStatus.CORRECTED else (
-            corrected_value.strip() if corrected_value else ""
+        value = (
+            current.value
+            if status != CandidateFactStatus.CORRECTED
+            else (corrected_value.strip() if corrected_value else "")
         )
         if not value:
             raise ProblemException(

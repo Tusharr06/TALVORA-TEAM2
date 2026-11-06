@@ -198,8 +198,16 @@ class ScreeningService:
                 if not evidence_ids:
                     return ScreeningOutcome.UNKNOWN, "Matching fact has no source evidence.", []
                 if polarities == {CandidateFactPolarity.NEGATED.value}:
-                    return ScreeningOutcome.FAIL, "Cited human-reviewed evidence negates this skill.", used
-                return ScreeningOutcome.PASS, "A cited human-reviewed fact affirms this skill.", used
+                    return (
+                        ScreeningOutcome.FAIL,
+                        "Cited human-reviewed evidence negates this skill.",
+                        used,
+                    )
+                return (
+                    ScreeningOutcome.PASS,
+                    "A cited human-reviewed fact affirms this skill.",
+                    used,
+                )
             return (
                 ScreeningOutcome.UNKNOWN,
                 "No human-reviewed fact establishes this skill requirement.",
@@ -214,12 +222,12 @@ class ScreeningService:
                     [],
                 )
             all_experience_facts = [
-                fact for fact in facts
+                fact
+                for fact in facts
                 if fact.fact_type == CandidateFactType.EXPERIENCE_MONTHS.value
             ]
             if any(
-                fact.status == CandidateFactStatus.EXTRACTED.value
-                for fact in all_experience_facts
+                fact.status == CandidateFactStatus.EXTRACTED.value for fact in all_experience_facts
             ):
                 return (
                     ScreeningOutcome.UNKNOWN,
@@ -227,30 +235,28 @@ class ScreeningService:
                     [],
                 )
             matching_facts = [
-                fact for fact in reviewed_facts
+                fact
+                for fact in reviewed_facts
                 if fact.fact_type == CandidateFactType.EXPERIENCE_MONTHS.value
             ]
             if any(
-                fact.polarity != CandidateFactPolarity.AFFIRMED.value
-                for fact in matching_facts
+                fact.polarity != CandidateFactPolarity.AFFIRMED.value for fact in matching_facts
             ):
                 return ScreeningOutcome.UNKNOWN, "Experience evidence is uncertain.", []
             parsed: list[tuple[CandidateFactRevision, int]] = []
             for fact in matching_facts:
-                match = re.fullmatch(
-                    r"\s*(\d+)\s*(?:months?|mos?)?\s*", fact.value, re.IGNORECASE
-                )
+                match = re.fullmatch(r"\s*(\d+)\s*(?:months?|mos?)?\s*", fact.value, re.IGNORECASE)
                 if match:
                     parsed.append((fact, int(match.group(1))))
             amounts = {amount for _, amount in parsed}
             if len(amounts) != 1:
-                return ScreeningOutcome.UNKNOWN, (
-                    "Experience evidence is missing, unparseable, or conflicting."
-                ), []
+                return (
+                    ScreeningOutcome.UNKNOWN,
+                    ("Experience evidence is missing, unparseable, or conflicting."),
+                    [],
+                )
             fact, amount = parsed[0]
-            evidence_ids = cls._fact_evidence_ids(
-                uow, tenant_id, [fact], document_version_id
-            )
+            evidence_ids = cls._fact_evidence_ids(uow, tenant_id, [fact], document_version_id)
             if not evidence_ids:
                 return ScreeningOutcome.UNKNOWN, "Experience fact has no source evidence.", []
             required = int(config.get("min_months", 0))
@@ -270,12 +276,10 @@ class ScreeningService:
                     [],
                 )
             all_education_facts = [
-                fact for fact in facts
-                if fact.fact_type == CandidateFactType.EDUCATION_LEVEL.value
+                fact for fact in facts if fact.fact_type == CandidateFactType.EDUCATION_LEVEL.value
             ]
             if any(
-                fact.status == CandidateFactStatus.EXTRACTED.value
-                for fact in all_education_facts
+                fact.status == CandidateFactStatus.EXTRACTED.value for fact in all_education_facts
             ):
                 return (
                     ScreeningOutcome.UNKNOWN,
@@ -283,12 +287,11 @@ class ScreeningService:
                     [],
                 )
             education = [
-                fact for fact in reviewed_facts
+                fact
+                for fact in reviewed_facts
                 if fact.fact_type == CandidateFactType.EDUCATION_LEVEL.value
             ]
-            if any(
-                fact.polarity != CandidateFactPolarity.AFFIRMED.value for fact in education
-            ):
+            if any(fact.polarity != CandidateFactPolarity.AFFIRMED.value for fact in education):
                 return ScreeningOutcome.UNKNOWN, "Education evidence is uncertain.", []
             degree_values = {fact.value.strip().upper() for fact in education}
             if len(degree_values) != 1:
@@ -298,9 +301,7 @@ class ScreeningService:
                     [],
                 )
             fact = education[0]
-            evidence_ids = cls._fact_evidence_ids(
-                uow, tenant_id, [fact], document_version_id
-            )
+            evidence_ids = cls._fact_evidence_ids(uow, tenant_id, [fact], document_version_id)
             if not evidence_ids:
                 return ScreeningOutcome.UNKNOWN, "Education fact has no source evidence.", []
             minimum_degree = str(config.get("minimum_degree", "")).upper()
@@ -405,10 +406,12 @@ class ScreeningService:
     def run(cls, uow: UnitOfWork, actor: ActorContext, application_id: UUID) -> ScreeningRun:
         tenant_id = cls._authorize(actor)
         application = uow.session.scalar(
-            select(Application).where(
+            select(Application)
+            .where(
                 Application.tenant_id == tenant_id,
                 Application.id == application_id,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if application is None:
             raise ProblemException(
@@ -462,9 +465,7 @@ class ScreeningService:
         document_version_id = (
             active_binding.document_version_id if active_binding is not None else None
         )
-        facts = cls._latest_facts(
-            uow, tenant_id, application.candidate_id, document_version_id
-        )
+        facts = cls._latest_facts(uow, tenant_id, application.candidate_id, document_version_id)
         evaluated = [
             (
                 criterion,
@@ -543,10 +544,12 @@ class ScreeningService:
     ) -> tuple[ScreeningRun, list[ScreeningResult], ScreeningOverride | None]:
         tenant_id = cls._authorize(actor)
         run = uow.session.scalar(
-            select(ScreeningRun).where(
+            select(ScreeningRun)
+            .where(
                 ScreeningRun.tenant_id == tenant_id,
                 ScreeningRun.id == screening_run_id,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if run is None:
             raise ProblemException(
@@ -608,10 +611,12 @@ class ScreeningService:
                 detail="A recruiter override must include a reason.",
             )
         run = uow.session.scalar(
-            select(ScreeningRun).where(
+            select(ScreeningRun)
+            .where(
                 ScreeningRun.tenant_id == tenant_id,
                 ScreeningRun.id == screening_run_id,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if run is None:
             raise ProblemException(
