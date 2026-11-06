@@ -1,0 +1,8 @@
+{
+  "_comment": "Synthetic example request for POST /api/v1/candidates, created manually by a recruiter.",
+  "display_name": "Avery Nakamura",
+  "email": "avery.nakamura.example@example.com",
+  "phone": "+1-555-0100",
+  "source": "MANUAL_ENTRY",
+  "is_draft": false
+}

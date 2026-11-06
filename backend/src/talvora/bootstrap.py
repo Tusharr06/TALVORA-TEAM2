@@ -101,6 +101,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # 3. Register Core Routers
     from talvora.main import router as core_router
+    from talvora.modules.applications.api.routes import candidate_history_router
+    from talvora.modules.applications.api.routes import router as applications_router
+    from talvora.modules.candidates.api.routes import router as candidates_router
     from talvora.modules.identity.api.routes import router as auth_router
     from talvora.modules.jobs.api.routes import router as jobs_router
     from talvora.modules.operations.api.routes import router as operations_router
@@ -111,5 +114,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(organizations_router, prefix="/api/v1")
     app.include_router(operations_router)
     app.include_router(jobs_router)
+    app.include_router(candidates_router)
+    app.include_router(applications_router)
+    app.include_router(candidate_history_router)
 
     return app

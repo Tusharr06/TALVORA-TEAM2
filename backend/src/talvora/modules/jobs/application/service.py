@@ -272,6 +272,82 @@ class JobService:
         return job
 
     @classmethod
+    def get_job_with_authority(
+        cls,
+        uow: UnitOfWork,
+        actor: ActorContext,
+        job_id: UUID,
+        allowed_roles: set[str],
+    ) -> Job:
+        """Public use-case for other modules: fetch a job and enforce object-level authority.
+
+        Used by cross-module callers (e.g. the applications module) that need to verify a
+        human actor holds an explicit job assignment before permitting a pipeline mutation,
+        without reaching into this module's SQLAlchemy models directly.
+        """
+        tenant_id = cls._verify_tenant_actor(actor)
+
+        job = uow.session.scalar(select(Job).where(Job.tenant_id == tenant_id, Job.id == job_id))
+        if not job:
+            raise ProblemException(
+                status_code=404,
+                title="Resource Not Found",
+                code="RESOURCE_NOT_FOUND",
+                detail="The requested job vacancy was not found.",
+            )
+
+        assignments = cls._get_job_assignments(uow, tenant_id, job_id)
+        if not cls._has_job_authority(actor, assignments, allowed_roles):
+            raise ProblemException(
+                status_code=403,
+                title="Forbidden",
+                code="CAPABILITY_DENIED",
+                detail="Actor is not assigned an authorized role on this job vacancy.",
+            )
+        return job
+
+    @classmethod
+    def is_actor_assigned_to_job(
+        cls,
+        uow: UnitOfWork,
+        actor: ActorContext,
+        job_id: UUID,
+    ) -> bool:
+        """Public use-case: does the actor hold any explicit assignment on this job?"""
+        tenant_id = cls._verify_tenant_actor(actor)
+        assignments = cls._get_job_assignments(uow, tenant_id, job_id)
+        return any(a.user_id == actor.user_id for a in assignments)
+
+    @classmethod
+    def get_assigned_job_ids(cls, uow: UnitOfWork, actor: ActorContext) -> list[UUID] | None:
+        """Public use-case: job IDs the actor is explicitly assigned to.
+
+        Returns None to mean "unrestricted" (organization OWNER). Used by cross-module
+        callers (e.g. applications listing) to scope results for roles such as
+        INTERVIEWER that are object-level restricted to their assigned jobs.
+        """
+        tenant_id = cls._verify_tenant_actor(actor)
+        if actor.membership and actor.membership.role == Role.OWNER.value:
+            return None
+
+        stmt = select(JobAssignment.job_id).where(
+            JobAssignment.tenant_id == tenant_id,
+            JobAssignment.user_id == actor.user_id,
+        )
+        return list(uow.session.scalars(stmt).all())
+
+    @classmethod
+    def get_jobs_by_ids(
+        cls, uow: UnitOfWork, actor: ActorContext, job_ids: list[UUID]
+    ) -> dict[UUID, Job]:
+        """Public use-case: batch-fetch jobs by ID within the actor's tenant."""
+        tenant_id = cls._verify_tenant_actor(actor)
+        if not job_ids:
+            return {}
+        stmt = select(Job).where(Job.tenant_id == tenant_id, Job.id.in_(set(job_ids)))
+        return {job.id: job for job in uow.session.scalars(stmt).all()}
+
+    @classmethod
     def list_jobs(
         cls,
         uow: UnitOfWork,

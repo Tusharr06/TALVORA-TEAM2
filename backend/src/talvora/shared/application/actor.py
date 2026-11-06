@@ -39,6 +39,9 @@ class CandidateCapabilityContext:
     recipient_email: str
 
 
+PrincipalKind = Literal["HUMAN", "SYSTEM_WORKER", "AI_MODEL"]
+
+
 @dataclass(frozen=True)
 class ActorContext:
     """Unified actor context for authorization evaluation."""
@@ -46,10 +49,20 @@ class ActorContext:
     principal: Principal | None = None
     membership: MembershipContext | None = None
     candidate_link: CandidateCapabilityContext | None = None
+    principal_kind: PrincipalKind = "HUMAN"
 
     @property
     def is_authenticated(self) -> bool:
         return self.principal is not None
+
+    @property
+    def is_human(self) -> bool:
+        """True only for an interactive, session-authenticated human staff member.
+
+        Background workers and AI/model-originated contexts must never report True here;
+        hiring/pipeline decisions require an accountable human actor.
+        """
+        return self.principal is not None and self.principal_kind == "HUMAN"
 
     @property
     def is_staff(self) -> bool:

@@ -30,6 +30,11 @@ class Capability(StrEnum):
     PUBLISH_JOB_REQUIREMENTS = "PUBLISH_JOB_REQUIREMENTS"
     MANAGE_JOB_ASSIGNMENTS = "MANAGE_JOB_ASSIGNMENTS"
     TRANSITION_JOB_STATUS = "TRANSITION_JOB_STATUS"
+    CREATE_CANDIDATE = "CREATE_CANDIDATE"
+    VIEW_CANDIDATES = "VIEW_CANDIDATES"
+    EDIT_CANDIDATE = "EDIT_CANDIDATE"
+    VERIFY_CANDIDATE_CONTACT = "VERIFY_CANDIDATE_CONTACT"
+    CREATE_APPLICATION = "CREATE_APPLICATION"
     READ_APPLICATION = "READ_APPLICATION"
     TRANSITION_STAGE = "TRANSITION_STAGE"
     APPROVE_SCHEDULING = "APPROVE_SCHEDULING"
@@ -54,6 +59,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.PUBLISH_JOB_REQUIREMENTS.value,
             Capability.MANAGE_JOB_ASSIGNMENTS.value,
             Capability.TRANSITION_JOB_STATUS.value,
+            Capability.CREATE_CANDIDATE.value,
+            Capability.VIEW_CANDIDATES.value,
+            Capability.EDIT_CANDIDATE.value,
+            Capability.VERIFY_CANDIDATE_CONTACT.value,
+            Capability.CREATE_APPLICATION.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -71,6 +81,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.CREATE_JOB.value,
             Capability.VIEW_JOBS.value,
             Capability.MANAGE_JOB_ASSIGNMENTS.value,
+            Capability.CREATE_CANDIDATE.value,
+            Capability.VIEW_CANDIDATES.value,
+            Capability.EDIT_CANDIDATE.value,
+            Capability.VERIFY_CANDIDATE_CONTACT.value,
+            Capability.CREATE_APPLICATION.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -88,6 +103,11 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.PUBLISH_JOB_REQUIREMENTS.value,
             Capability.MANAGE_JOB_ASSIGNMENTS.value,
             Capability.TRANSITION_JOB_STATUS.value,
+            Capability.CREATE_CANDIDATE.value,
+            Capability.VIEW_CANDIDATES.value,
+            Capability.EDIT_CANDIDATE.value,
+            Capability.VERIFY_CANDIDATE_CONTACT.value,
+            Capability.CREATE_APPLICATION.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -104,6 +124,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.PUBLISH_JOB_REQUIREMENTS.value,
             Capability.MANAGE_JOB_ASSIGNMENTS.value,
             Capability.TRANSITION_JOB_STATUS.value,
+            Capability.VIEW_CANDIDATES.value,
+            Capability.CREATE_APPLICATION.value,
             Capability.READ_APPLICATION.value,
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
@@ -115,6 +137,7 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.VIEW_MEMBERS.value,
             Capability.VIEW_TEAMS.value,
             Capability.VIEW_JOBS.value,
+            Capability.VIEW_CANDIDATES.value,
             Capability.READ_APPLICATION.value,
             Capability.SUBMIT_FEEDBACK.value,
         }

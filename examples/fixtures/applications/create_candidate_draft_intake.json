@@ -1,0 +1,5 @@
+{
+  "_comment": "Synthetic example request for POST /api/v1/candidates. An unverified draft candidate created by an upload-intake workflow requires no invented name or address.",
+  "is_draft": true,
+  "source": "UPLOAD_INTAKE"
+}

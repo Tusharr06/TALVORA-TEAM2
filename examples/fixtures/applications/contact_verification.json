@@ -1,0 +1,8 @@
+{
+  "_comment": "Synthetic example request for POST /api/v1/candidates/{id}/contact-verifications. This records a human attestation bound to an exact contact revision version -- it is NOT independent proof of mailbox ownership.",
+  "contact_revision_number": 1,
+  "verified_address": "avery.nakamura.example@example.com",
+  "verification_source": "RECRUITER_ATTESTATION",
+  "notes": "Confirmed address verbally during phone screen.",
+  "expected_version": 1
+}

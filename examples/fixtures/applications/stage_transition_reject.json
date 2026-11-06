@@ -1,0 +1,6 @@
+{
+  "_comment": "Synthetic example request for POST /api/v1/applications/{id}/stage-transitions. A negative terminal transition requires a mandatory, non-empty reason.",
+  "target_stage": "REJECTED",
+  "reason": "Does not meet the minimum required experience threshold documented in the published requirement version.",
+  "expected_version": 2
+}
