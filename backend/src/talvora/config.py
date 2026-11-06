@@ -49,6 +49,21 @@ class Settings(BaseSettings):
     moto_endpoint_url: str | None = Field(default="http://localhost:5000")
     s3_kms_key_id: str | None = Field(default=None)
 
+    # --- Document Intake (P06): batch/file limits and object receipt reconciliation ---
+    upload_max_items_per_batch: int = Field(default=100)
+    upload_max_file_bytes: int = Field(default=10 * 1024 * 1024)  # 10 MiB per file
+    upload_max_batch_bytes: int = Field(default=500 * 1024 * 1024)  # 500 MiB per batch
+    upload_stream_chunk_bytes: int = Field(default=256 * 1024)
+    object_receipt_orphan_grace_minutes: int = Field(default=30)
+
+    # --- Malware Scanning (ClamAV clamd daemon) ---
+    clamav_host: str = Field(default="localhost")
+    clamav_port: int = Field(default=3310)
+    clamav_connect_timeout_seconds: float = Field(default=5.0)
+    clamav_scan_timeout_seconds: float = Field(default=30.0)
+    clamav_max_stream_bytes: int = Field(default=15 * 1024 * 1024)
+    clamav_chunk_bytes: int = Field(default=256 * 1024)
+
     # --- Messaging & SQS ---
     sqs_queue_url: str | None = Field(
         default="http://localhost:5000/123456789012/talvora-tasks-local"

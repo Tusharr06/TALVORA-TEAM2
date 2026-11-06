@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 import talvora.modules.applications.domain.models  # noqa: F401
 import talvora.modules.audit.domain.models  # noqa: F401
 import talvora.modules.candidates.domain.models  # noqa: F401
+import talvora.modules.documents.domain.models  # noqa: F401
 import talvora.modules.identity.domain.models  # noqa: F401
 import talvora.modules.jobs.domain.models  # noqa: F401
 import talvora.modules.operations.domain.models  # noqa: F401

@@ -37,6 +37,8 @@ class Capability(StrEnum):
     CREATE_APPLICATION = "CREATE_APPLICATION"
     READ_APPLICATION = "READ_APPLICATION"
     TRANSITION_STAGE = "TRANSITION_STAGE"
+    MANAGE_DOCUMENT_INTAKE = "MANAGE_DOCUMENT_INTAKE"
+    READ_DOCUMENTS = "READ_DOCUMENTS"
     APPROVE_SCHEDULING = "APPROVE_SCHEDULING"
     SUBMIT_FEEDBACK = "SUBMIT_FEEDBACK"
     EXECUTE_PRIVACY_PURGE = "EXECUTE_PRIVACY_PURGE"
@@ -69,6 +71,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.APPROVE_SCHEDULING.value,
             Capability.SUBMIT_FEEDBACK.value,
             Capability.EXECUTE_PRIVACY_PURGE.value,
+            Capability.MANAGE_DOCUMENT_INTAKE.value,
+            Capability.READ_DOCUMENTS.value,
         }
     ),
     Role.ADMIN.value: frozenset(
@@ -91,6 +95,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.APPROVE_SCHEDULING.value,
             Capability.SUBMIT_FEEDBACK.value,
             Capability.EXECUTE_PRIVACY_PURGE.value,
+            Capability.MANAGE_DOCUMENT_INTAKE.value,
+            Capability.READ_DOCUMENTS.value,
         }
     ),
     Role.RECRUITER.value: frozenset(
@@ -112,6 +118,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
             Capability.SUBMIT_FEEDBACK.value,
+            Capability.MANAGE_DOCUMENT_INTAKE.value,
+            Capability.READ_DOCUMENTS.value,
         }
     ),
     Role.HIRING_MANAGER.value: frozenset(
@@ -130,6 +138,8 @@ ROLE_CAPABILITIES: Final[dict[str, frozenset[str]]] = {
             Capability.TRANSITION_STAGE.value,
             Capability.APPROVE_SCHEDULING.value,
             Capability.SUBMIT_FEEDBACK.value,
+            Capability.MANAGE_DOCUMENT_INTAKE.value,
+            Capability.READ_DOCUMENTS.value,
         }
     ),
     Role.INTERVIEWER.value: frozenset(

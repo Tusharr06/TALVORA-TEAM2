@@ -52,6 +52,12 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "candidate_contact_event" in tables
         assert "application" in tables
         assert "stage_event" in tables
+        assert "upload_batch" in tables
+        assert "upload_item" in tables
+        assert "document" in tables
+        assert "document_version" in tables
+        assert "object_receipt" in tables
+        assert "application_document" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -70,6 +76,12 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "candidate" not in remaining_tables
         assert "application" not in remaining_tables
         assert "stage_event" not in remaining_tables
+        assert "upload_batch" not in remaining_tables
+        assert "upload_item" not in remaining_tables
+        assert "document" not in remaining_tables
+        assert "document_version" not in remaining_tables
+        assert "object_receipt" not in remaining_tables
+        assert "application_document" not in remaining_tables
         fresh_engine.dispose()
 
     finally:

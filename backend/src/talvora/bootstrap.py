@@ -69,6 +69,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = effective_settings
     app.state.db_manager = DatabaseManager(effective_settings)
 
+    # Object storage: a real S3/Moto-backed adapter unless the host application has
+    # already injected a test double (e.g. InMemoryObjectStorageAdapter) before this
+    # call. Constructing a boto3 client performs no network I/O; bucket existence is
+    # the caller's responsibility (e.g. infra-as-code in staging/production, or a test
+    # fixture calling `ensure_bucket` explicitly against Moto), never auto-provisioned
+    # silently on every application boot.
+    if not hasattr(app.state, "object_storage"):
+        from talvora.modules.documents.application.storage import S3ObjectStorageAdapter
+
+        app.state.object_storage = S3ObjectStorageAdapter(effective_settings)
+
+    if not hasattr(app.state, "virus_scanner"):
+        from talvora.modules.documents.application.scanner import ClamdScanner
+
+        app.state.virus_scanner = ClamdScanner.from_settings(effective_settings)
+
     # 1. Register RFC 7807 problem exception handlers
     register_exception_handlers(app)
 
@@ -104,6 +120,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from talvora.modules.applications.api.routes import candidate_history_router
     from talvora.modules.applications.api.routes import router as applications_router
     from talvora.modules.candidates.api.routes import router as candidates_router
+    from talvora.modules.documents.api.routes import application_bindings_router, documents_router
+    from talvora.modules.documents.api.routes import router as upload_batches_router
     from talvora.modules.identity.api.routes import router as auth_router
     from talvora.modules.jobs.api.routes import router as jobs_router
     from talvora.modules.operations.api.routes import router as operations_router
@@ -117,5 +135,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(candidates_router)
     app.include_router(applications_router)
     app.include_router(candidate_history_router)
+    app.include_router(upload_batches_router)
+    app.include_router(documents_router)
+    app.include_router(application_bindings_router)
 
     return app
