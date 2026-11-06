@@ -1,6 +1,6 @@
 """External Actions, Human Approvals, Booking Saga, and Interview Reservations.
 
-Revision ID: 0010_external_actions_and_interviews
+Revision ID: 0010_external_actions
 Revises: 0009_interview_scheduling
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "0010_external_actions_and_interviews"
+revision: str = "0010_external_actions"
 down_revision: str | None = "0009_interview_scheduling"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

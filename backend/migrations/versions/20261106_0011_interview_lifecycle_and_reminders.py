@@ -1,7 +1,7 @@
 """Notifications, Reminder Schedules, and Provider Synchronization State.
 
-Revision ID: 0011_interview_lifecycle_and_reminders
-Revises: 0010_external_actions_and_interviews
+Revision ID: 0011_interview_lifecycle
+Revises: 0010_external_actions
 """
 
 from collections.abc import Sequence
@@ -9,8 +9,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0011_interview_lifecycle_and_reminders"
-down_revision: str | None = "0010_external_actions_and_interviews"
+revision: str = "0011_interview_lifecycle"
+down_revision: str | None = "0010_external_actions"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
