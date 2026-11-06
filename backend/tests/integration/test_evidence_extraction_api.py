@@ -18,8 +18,10 @@ from httpx import ASGITransport, AsyncClient
 
 from talvora.bootstrap import create_app
 from talvora.config import Settings, get_settings
+from talvora.modules.applications.domain.models import Application
 from talvora.modules.documents.application.scanner import ClamdScanner
 from talvora.modules.documents.application.storage import S3ObjectStorageAdapter
+from talvora.modules.documents.domain.models import Document
 from talvora.modules.evidence.domain.models import EvidenceFragment
 from talvora.modules.identity.infrastructure.oidc import MockOidcClient
 from talvora.modules.organizations.domain.models import Membership
@@ -481,3 +483,174 @@ async def test_stable_evidence_retrieval_after_another_resume_is_uploaded(
 
         assert before_payload["segments"] == after_payload["segments"]
         assert before_payload["extraction"]["id"] == after_payload["extraction"]["id"]
+
+
+@pytest.mark.integration
+async def test_fact_review_screening_override_and_cited_summary_lifecycle(
+    evidence_test_app: tuple[Any, MockOidcClient, InMemorySystemMailProvider],
+) -> None:
+    app, _, _ = evidence_test_app
+    async with (
+        ASGITransport(app=app) as transport,
+        AsyncClient(transport=transport, base_url="http://testserver") as client,
+    ):
+        _, csrf_token, org_id = await login_and_setup_org(client)
+        job_id = await create_open_job(client, csrf_token)
+        batch = await create_batch(client, csrf_token, job_id)
+        item = await _full_upload_and_extract(
+            app,
+            client,
+            csrf_token,
+            batch["id"],
+            org_id,
+            build_digital_pdf(["Experienced backend engineer with Python and PostgreSQL skills."]),
+            "resume.pdf",
+            "application/pdf",
+            new_candidate_display_name="Evidence Lifecycle Candidate",
+            new_candidate_email="lifecycle@example.com",
+        )
+
+        session = app.state.db_manager.session_maker()
+        try:
+            document = session.scalar(
+                sa.select(Document).where(
+                    Document.tenant_id == UUID(org_id), Document.id == UUID(item["document_id"])
+                )
+            )
+            assert document is not None
+            application = session.scalar(
+                sa.select(Application).where(
+                    Application.tenant_id == UUID(org_id),
+                    Application.job_id == UUID(job_id),
+                    Application.candidate_id == document.candidate_id,
+                )
+            )
+            assert application is not None
+            fragment = session.scalar(
+                sa.select(EvidenceFragment).where(
+                    EvidenceFragment.tenant_id == UUID(org_id),
+                    EvidenceFragment.document_version_id == UUID(item["document_version_id"]),
+                )
+            )
+            assert fragment is not None
+            candidate_id = document.candidate_id
+            application_id = application.id
+            evidence_id = fragment.id
+        finally:
+            session.close()
+
+        binding_response = await client.post(
+            f"/api/v1/applications/{application_id}/document-bindings",
+            json={
+                "document_version_id": str(item["document_version_id"]),
+                "expected_binding_generation": 0,
+            },
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert binding_response.status_code == 201, binding_response.text
+
+        fact_response = await client.post(
+            f"/api/v1/candidates/{candidate_id}/facts",
+            json={
+                "fact_type": "SKILL",
+                "value": "Python",
+                "evidence_fragment_ids": [str(evidence_id)],
+            },
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert fact_response.status_code == 201, fact_response.text
+        fact = fact_response.json()
+
+        review_response = await client.post(
+            f"/api/v1/candidates/{candidate_id}/facts/{fact['fact_key']}/review",
+            json={
+                "expected_revision": 1,
+                "status": "CORRECTED",
+                "corrected_value": "Python",
+                "review_note": "Confirmed against the cited source excerpt.",
+            },
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert review_response.status_code == 200, review_response.text
+        reviewed = review_response.json()
+        assert reviewed["revision_number"] == 2
+        assert reviewed["value"] == "Python"
+        assert reviewed["extracted_value"] == "Python"
+
+        history_response = await client.get(
+            f"/api/v1/candidates/{candidate_id}/facts/{fact['fact_key']}/revisions"
+        )
+        assert history_response.status_code == 200
+        assert [row["status"] for row in history_response.json()] == ["EXTRACTED", "CORRECTED"]
+
+        screening_response = await client.post(
+            f"/api/v1/applications/{application_id}/screening",
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert screening_response.status_code == 201, screening_response.text
+        screening = screening_response.json()
+        assert screening["outcome"] == "PASS"
+        assert screening["effective_outcome"] == "PASS"
+        assert screening["results"][0]["citations"][0]["evidence_fragment_ids"] == [
+            str(evidence_id)
+        ], screening["results"]
+
+        session = app.state.db_manager.session_maker()
+        try:
+            membership = session.scalar(
+                sa.select(Membership).where(Membership.tenant_id == UUID(org_id))
+            )
+            assert membership is not None
+            membership.role = "RECRUITER"
+            session.commit()
+        finally:
+            session.close()
+
+        override_response = await client.post(
+            f"/api/v1/screening/{screening['id']}/overrides",
+            json={
+                "outcome": "FAIL",
+                "reason": "Recruiter review identified a job-specific concern.",
+            },
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert override_response.status_code == 201, override_response.text
+        assert override_response.json()["outcome"] == "PASS"
+        assert override_response.json()["effective_outcome"] == "FAIL"
+
+        summary_response = await client.post(
+            f"/api/v1/applications/{application_id}/summaries",
+            json={"screening_run_id": screening["id"]},
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert summary_response.status_code == 201, summary_response.text
+        summary = summary_response.json()
+        assert summary["quality_status"] == "ACCEPTED"
+        assert "skill: Python" in summary["summary_text"]
+        assert "deterministic screening: PASS; recruiter override: FAIL" in summary["summary_text"]
+        assert summary["claims"][0]["evidence_fragment_ids"] == [str(evidence_id)]
+
+        rejected_summary_response = await client.post(
+            f"/api/v1/applications/{application_id}/summaries",
+            json={
+                "screening_run_id": screening["id"],
+                "draft_claims": [
+                    {
+                        "text": "Python is an award-winning skill",
+                        "fact_revision_id": reviewed["id"],
+                        "evidence_fragment_ids": [str(evidence_id)],
+                    }
+                ],
+            },
+            headers={"X-CSRF-Token": csrf_token, "Origin": "http://testserver"},
+        )
+        assert rejected_summary_response.status_code == 201, rejected_summary_response.text
+        rejected_summary = rejected_summary_response.json()
+        assert rejected_summary["quality_status"] == "REJECTED"
+        assert rejected_summary["summary_text"] == ""
+        assert rejected_summary["quality_issues"]
+
+        override_history = await client.get(f"/api/v1/screening/{screening['id']}/overrides")
+        assert override_history.status_code == 200
+        assert override_history.json()["original_outcome"] == "PASS"
+        assert len(override_history.json()["overrides"]) == 1

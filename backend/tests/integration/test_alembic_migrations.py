@@ -61,6 +61,15 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "extraction_run" in tables
         assert "source_segment" in tables
         assert "evidence_fragment" in tables
+        assert "candidate_fact_revision" in tables
+        assert "candidate_fact_evidence" in tables
+        assert "screening_run" in tables
+        assert "screening_result" in tables
+        assert "screening_result_fact" in tables
+        assert "screening_override" in tables
+        assert "candidate_summary_revision" in tables
+        assert "candidate_summary_claim" in tables
+        assert "candidate_summary_citation" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -88,6 +97,15 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "extraction_run" not in remaining_tables
         assert "source_segment" not in remaining_tables
         assert "evidence_fragment" not in remaining_tables
+        assert "candidate_fact_revision" not in remaining_tables
+        assert "candidate_fact_evidence" not in remaining_tables
+        assert "screening_run" not in remaining_tables
+        assert "screening_result" not in remaining_tables
+        assert "screening_result_fact" not in remaining_tables
+        assert "screening_override" not in remaining_tables
+        assert "candidate_summary_revision" not in remaining_tables
+        assert "candidate_summary_claim" not in remaining_tables
+        assert "candidate_summary_citation" not in remaining_tables
         fresh_engine.dispose()
 
     finally:

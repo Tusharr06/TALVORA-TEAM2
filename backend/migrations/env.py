@@ -1,33 +1,33 @@
 """Alembic Migration Environment."""
 
-import asyncio
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 
+# Import all domain models so that Alembic knows about them
+import talvora.modules.applications.domain.models  # noqa: F401
+import talvora.modules.audit.domain.models  # noqa: F401
+import talvora.modules.candidates.domain.models  # noqa: F401
+import talvora.modules.documents.domain.models  # noqa: F401
+import talvora.modules.evidence.domain.models  # noqa: F401
+import talvora.modules.facts.domain.models  # noqa: F401
+import talvora.modules.identity.domain.models  # noqa: F401
+import talvora.modules.jobs.domain.models  # noqa: F401
+import talvora.modules.operations.domain.models  # noqa: F401
+import talvora.modules.organizations.domain.models  # noqa: F401
+import talvora.modules.screening.domain.models  # noqa: F401
+import talvora.modules.summaries.domain.models  # noqa: F401
 from talvora.config import get_settings
 from talvora.shared.infrastructure.models import Base
-
-# Import all domain models so that Alembic knows about them
-import talvora.modules.identity.domain.models  # noqa: F401
-import talvora.modules.organizations.domain.models  # noqa: F401
-import talvora.modules.operations.domain.models  # noqa: F401
-import talvora.modules.audit.domain.models  # noqa: F401
-import talvora.modules.jobs.domain.models  # noqa: F401
-import talvora.modules.candidates.domain.models  # noqa: F401
-import talvora.modules.applications.domain.models  # noqa: F401
 
 # this is the Alembic Config object
 config = context.config
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
-    try:
-        fileConfig(config.config_file_name)
-    except Exception:
-        pass
+    fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
 

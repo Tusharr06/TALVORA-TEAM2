@@ -11,10 +11,13 @@ import talvora.modules.audit.domain.models  # noqa: F401
 import talvora.modules.candidates.domain.models  # noqa: F401
 import talvora.modules.documents.domain.models  # noqa: F401
 import talvora.modules.evidence.domain.models  # noqa: F401
+import talvora.modules.facts.domain.models  # noqa: F401
 import talvora.modules.identity.domain.models  # noqa: F401
 import talvora.modules.jobs.domain.models  # noqa: F401
 import talvora.modules.operations.domain.models  # noqa: F401
 import talvora.modules.organizations.domain.models  # noqa: F401
+import talvora.modules.screening.domain.models  # noqa: F401
+import talvora.modules.summaries.domain.models  # noqa: F401
 from talvora.bootstrap import create_app
 from talvora.config import Settings
 from talvora.shared.domain.clock import FrozenClock
