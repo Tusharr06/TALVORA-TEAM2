@@ -26,6 +26,22 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      moto:
+        image: motoserver/moto:latest
+        ports:
+          - 5000:5000
+
+      clamav:
+        image: clamav/clamav:stable_base
+        ports:
+          - 3310:3310
+        options: >-
+          --health-cmd "echo PING | nc -w 2 localhost 3310 | grep -q PONG"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 20
+          --health-start-period 120s
+
     env:
       TALVORA_ENVIRONMENT: test
       TALVORA_DEBUG: "false"
@@ -64,6 +80,21 @@ jobs:
         working-directory: ./backend
         run: |
           uv run mypy src/ tests/
+
+      - name: Wait for ClamAV Virus Database to Load
+        run: |
+          for i in $(seq 1 30); do
+            RESPONSE=$(echo "PING" | timeout 2 nc localhost 3310 2>/dev/null || true)
+            if [ "$RESPONSE" = "PONG" ]; then
+              echo "ClamAV responded to PING; giving the database a brief grace period to finish loading."
+              sleep 5
+              exit 0
+            fi
+            echo "Waiting for ClamAV... ($i/30)"
+            sleep 5
+          done
+          echo "ClamAV did not become ready in time." >&2
+          exit 1
 
       - name: Run Pytest Suite
         working-directory: ./backend
