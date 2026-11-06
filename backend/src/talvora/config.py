@@ -104,6 +104,14 @@ class Settings(BaseSettings):
         default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
     )
 
+    # --- Google Workspace Integrations (P11) ---
+    google_client_id: str | None = Field(default=None)
+    google_client_secret: str | None = Field(default=None)
+    google_redirect_uri: str = Field(
+        default="http://localhost:8000/api/v1/integrations/google/callback"
+    )
+    allow_mock_google_adapter: bool = Field(default=True)
+
     # --- System Mail ---
     mail_from_address: str = Field(default="system@talvora.local")
     mail_provider: str = Field(default="mailpit")

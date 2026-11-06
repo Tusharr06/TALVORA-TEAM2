@@ -133,9 +133,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from talvora.modules.evidence.api.routes import evidence_documents_router, evidence_router
     from talvora.modules.facts.api.routes import router as candidate_facts_router
     from talvora.modules.identity.api.routes import router as auth_router
+    from talvora.modules.integrations.api.routes import router as integrations_router
     from talvora.modules.jobs.api.routes import router as jobs_router
     from talvora.modules.operations.api.routes import router as operations_router
     from talvora.modules.organizations.api.routes import router as organizations_router
+    from talvora.modules.scheduling.api.routes import router as scheduling_router
     from talvora.modules.screening.api.routes import router as screening_router
     from talvora.modules.summaries.api.routes import router as summaries_router
 
@@ -155,5 +157,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(candidate_facts_router)
     app.include_router(screening_router)
     app.include_router(summaries_router)
+    app.include_router(integrations_router)
+    app.include_router(scheduling_router)
 
     return app

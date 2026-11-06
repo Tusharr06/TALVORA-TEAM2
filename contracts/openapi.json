@@ -3722,6 +3722,1923 @@
           }
         }
       }
+    },
+    "/api/v1/candidates/{candidate_id}/facts": {
+      "get": {
+        "tags": [
+          "Candidate Facts"
+        ],
+        "summary": "List Candidate Facts",
+        "operationId": "list_candidate_facts_api_v1_candidates__candidate_id__facts_get",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateFactResponse"
+                  },
+                  "title": "Response List Candidate Facts Api V1 Candidates  Candidate Id  Facts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Candidate Facts"
+        ],
+        "summary": "Derive Candidate Fact",
+        "operationId": "derive_candidate_fact_api_v1_candidates__candidate_id__facts_post",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeriveCandidateFactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateFactResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/facts/{fact_key}/review": {
+      "post": {
+        "tags": [
+          "Candidate Facts"
+        ],
+        "summary": "Review Candidate Fact",
+        "operationId": "review_candidate_fact_api_v1_candidates__candidate_id__facts__fact_key__review_post",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "fact_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fact Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCandidateFactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateFactResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/facts/{fact_key}/revisions": {
+      "get": {
+        "tags": [
+          "Candidate Facts"
+        ],
+        "summary": "List Candidate Fact Revisions",
+        "operationId": "list_candidate_fact_revisions_api_v1_candidates__candidate_id__facts__fact_key__revisions_get",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "fact_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Fact Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateFactResponse"
+                  },
+                  "title": "Response List Candidate Fact Revisions Api V1 Candidates  Candidate Id  Facts  Fact Key  Revisions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/screening": {
+      "post": {
+        "tags": [
+          "Screening"
+        ],
+        "summary": "Run Screening",
+        "operationId": "run_screening_api_v1_applications__application_id__screening_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/{screening_run_id}": {
+      "get": {
+        "tags": [
+          "Screening"
+        ],
+        "summary": "Get Screening",
+        "operationId": "get_screening_api_v1_screening__screening_run_id__get",
+        "parameters": [
+          {
+            "name": "screening_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/{screening_run_id}/overrides": {
+      "post": {
+        "tags": [
+          "Screening"
+        ],
+        "summary": "Override Screening",
+        "operationId": "override_screening_api_v1_screening__screening_run_id__overrides_post",
+        "parameters": [
+          {
+            "name": "screening_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreeningOverrideRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Screening"
+        ],
+        "summary": "List Screening Overrides",
+        "operationId": "list_screening_overrides_api_v1_screening__screening_run_id__overrides_get",
+        "parameters": [
+          {
+            "name": "screening_run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningOverridesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/summaries": {
+      "post": {
+        "tags": [
+          "Candidate Summaries"
+        ],
+        "summary": "Generate Summary",
+        "operationId": "generate_summary_api_v1_applications__application_id__summaries_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateSummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Candidate Summaries"
+        ],
+        "summary": "List Summaries",
+        "operationId": "list_summaries_api_v1_applications__application_id__summaries_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateSummaryResponse"
+                  },
+                  "title": "Response List Summaries Api V1 Applications  Application Id  Summaries Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/summaries/{summary_id}": {
+      "get": {
+        "tags": [
+          "Candidate Summaries"
+        ],
+        "summary": "Get Summary",
+        "operationId": "get_summary_api_v1_summaries__summary_id__get",
+        "parameters": [
+          {
+            "name": "summary_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Summary Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/google/authorize": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Initiate Google OAuth Authorization",
+        "description": "Creates a cryptographically bound OAuth transaction and returns the Google consent URL.",
+        "operationId": "initiate_google_authorize",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleAuthorizeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleAuthorizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/google/callback": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Google OAuth Callback Handler",
+        "description": "Validates returned state, exchanges code for credentials, and encrypts tokens before persistence.",
+        "operationId": "google_oauth_callback",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "State"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          },
+          {
+            "name": "error_description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error Description"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "List Organization Integrations",
+        "description": "Returns safe connection metadata. Admins see tenant-wide connections; members see their own.",
+        "operationId": "list_integrations",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{id}": {
+      "delete": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Disconnect an Integration",
+        "description": "Revokes Google credentials where possible and zeroes out stored token material.",
+        "operationId": "disconnect_integration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/{id}/reconnect": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Initiate Reconnection for an Existing Integration",
+        "description": "Generates an explicit consent OAuth URL to refresh scopes and force a new refresh token.",
+        "operationId": "reconnect_integration",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleAuthorizeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interview-requests": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Create an Interview Request for an Approved Candidate",
+        "description": "Creates a new interview request ensuring candidate contact is verified and stage is INTERVIEW_APPROVED.",
+        "operationId": "create_interview_request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterviewRequestPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interview-requests/{id}": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Get Interview Request Details",
+        "operationId": "get_interview_request",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewRequestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interview-requests/{id}/availability-links": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Issue Candidate Availability Link",
+        "description": "Generates an opaque single-use link for candidate availability collection.",
+        "operationId": "issue_candidate_link",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueAvailabilityLinkResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interview-requests/{id}/proposals/generate": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Generate Deterministic Interview Proposals",
+        "description": "Evaluates candidate availability + FreeBusy schedules and generates conflict-free slot proposals.",
+        "operationId": "generate_slot_proposals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateProposalsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotProposalResponse"
+                  },
+                  "title": "Response Generate Slot Proposals"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interview-requests/{id}/proposals": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "List Generated Slot Proposals",
+        "operationId": "list_slot_proposals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotProposalResponse"
+                  },
+                  "title": "Response List Slot Proposals"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/availability/{token}": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Candidate View: Get Scheduling Window and Details",
+        "description": "Safe unauthenticated endpoint allowing candidates to inspect their scheduling window.",
+        "operationId": "public_get_interview_details",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicInterviewDetailsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Candidate View: Submit Availability Intervals",
+        "description": "Candidate submits their available time windows.",
+        "operationId": "public_submit_availability",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAvailabilityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Public Submit Availability"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/external-actions": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Draft Human-Approved External Action",
+        "description": "Drafts an external action (CREATE_INTERVIEW or SEND_AVAILABILITY_REQUEST) requiring human approval.",
+        "operationId": "create_external_action",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "List External Actions",
+        "description": "Lists drafted and executed external actions within the tenant.",
+        "operationId": "list_external_actions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "action_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action Type"
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalActionResponse"
+                  },
+                  "title": "Response List External Actions"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/external-actions/{id}": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Get External Action Details",
+        "description": "Fetches details of an external action within tenant boundary.",
+        "operationId": "get_external_action",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/external-actions/{id}/approve": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Approve and Execute External Action",
+        "description": "Binds exact reviewed payload hash and version, then safely dispatches the external saga.",
+        "operationId": "approve_external_action",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveExternalActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/external-actions/{id}/resolve": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Resolve or Reject External Action",
+        "description": "Manually rejects or force-releases an ambiguous or pending external action.",
+        "operationId": "resolve_external_action",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveExternalActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "List Interviews",
+        "description": "Lists interviews for tenant with optional filtering by application, candidate, or status.",
+        "operationId": "list_interviews",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InterviewResponse"
+                  },
+                  "title": "Response List Interviews"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Get Interview Details and Ledgers",
+        "description": "Fetches full interview details including current revision, reservations, and reminders.",
+        "operationId": "get_interview_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}/reschedule-requests": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Draft Human-Approved Reschedule Request",
+        "description": "Drafts an approved external action to reschedule an interview to a new proposal slot.",
+        "operationId": "request_interview_reschedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestReschedulePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}/cancel-requests": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Draft Human-Approved Cancellation Request",
+        "description": "Drafts an approved external action to cancel an interview on Google Calendar.",
+        "operationId": "request_interview_cancellation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCancellationPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}/completion": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Record Human Interview Completion (COMPLETED / NO_SHOW)",
+        "description": "Explicit human recording of COMPLETED or NO_SHOW status with mandatory justification.",
+        "operationId": "record_interview_completion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInterviewPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}/reminders": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "List Scheduled and Historical Reminders",
+        "description": "Lists reminder schedule records associated with the interview.",
+        "operationId": "list_interview_reminders",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReminderScheduleResponse"
+                  },
+                  "title": "Response List Interview Reminders"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interviews/{id}/notifications": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "List Dispatch Notifications Ledger",
+        "description": "Lists delivery attempts and status history for interview notifications.",
+        "operationId": "list_interview_notifications",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponse"
+                  },
+                  "title": "Response List Interview Notifications"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/confirmation": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Candidate Public Confirmation or Decline",
+        "description": "Candidate confirms or declines attendance via their validated candidate session token.",
+        "operationId": "public_confirm_interview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicConfirmInterviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewRevisionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/change-requests": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Candidate Public Change Request",
+        "description": "Candidate requests a scheduling change without directly modifying the calendar.",
+        "operationId": "public_request_interview_change",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewRevisionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/google/calendar": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Google Calendar Push Notification Webhook",
+        "description": "Receives Google Calendar push notification headers and acknowledges webhook.",
+        "operationId": "google_calendar_webhook",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Google Calendar Webhook"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3981,6 +5898,26 @@
         "title": "ApplicationStage",
         "description": "Human-controlled hiring pipeline stages. No screening outcome writes this field."
       },
+      "ApproveExternalActionRequest": {
+        "properties": {
+          "expected_payload_hash": {
+            "type": "string",
+            "title": "Expected Payload Hash",
+            "description": "SHA-256 canonical hash of the action payload binding approval."
+          },
+          "expected_resource_version": {
+            "type": "integer",
+            "title": "Expected Resource Version",
+            "description": "Expected version of target resource."
+          }
+        },
+        "type": "object",
+        "required": [
+          "expected_payload_hash",
+          "expected_resource_version"
+        ],
+        "title": "ApproveExternalActionRequest"
+      },
       "AssignMemberRequest": {
         "properties": {
           "user_id": {
@@ -4000,6 +5937,26 @@
         ],
         "title": "AssignMemberRequest",
         "description": "Payload to assign a member to a vacancy role."
+      },
+      "AvailabilityIntervalItem": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "description": "ISO 8601 interval start timestamp."
+          },
+          "end": {
+            "type": "string",
+            "title": "End",
+            "description": "ISO 8601 interval end timestamp."
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "AvailabilityIntervalItem"
       },
       "Body_create_upload_item_api_v1_upload_batches__id__items_post": {
         "properties": {
@@ -4067,6 +6024,139 @@
           "file"
         ],
         "title": "Body_create_upload_item_api_v1_upload_batches__id__items_post"
+      },
+      "CandidateFactPolarity": {
+        "type": "string",
+        "enum": [
+          "AFFIRMED",
+          "NEGATED",
+          "UNKNOWN"
+        ],
+        "title": "CandidateFactPolarity",
+        "description": "Whether a structured fact affirms, negates, or cannot establish a claim."
+      },
+      "CandidateFactResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "fact_key": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fact Key"
+          },
+          "revision_number": {
+            "type": "integer",
+            "title": "Revision Number"
+          },
+          "fact_type": {
+            "type": "string",
+            "title": "Fact Type"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "extracted_value": {
+            "type": "string",
+            "title": "Extracted Value"
+          },
+          "polarity": {
+            "type": "string",
+            "title": "Polarity"
+          },
+          "extracted_polarity": {
+            "type": "string",
+            "title": "Extracted Polarity"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note"
+          },
+          "extraction_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Extraction Run Id"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "evidence_fragment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Evidence Fragment Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "candidate_id",
+          "fact_key",
+          "revision_number",
+          "fact_type",
+          "value",
+          "extracted_value",
+          "polarity",
+          "extracted_polarity",
+          "status",
+          "review_note",
+          "extraction_run_id",
+          "created_by",
+          "created_at",
+          "evidence_fragment_ids"
+        ],
+        "title": "CandidateFactResponse"
+      },
+      "CandidateFactStatus": {
+        "type": "string",
+        "enum": [
+          "EXTRACTED",
+          "VERIFIED",
+          "CORRECTED",
+          "REJECTED"
+        ],
+        "title": "CandidateFactStatus",
+        "description": "Review state of one immutable fact revision."
+      },
+      "CandidateFactType": {
+        "type": "string",
+        "enum": [
+          "SKILL",
+          "EXPERIENCE_MONTHS",
+          "EDUCATION_LEVEL",
+          "CERTIFICATION",
+          "OTHER"
+        ],
+        "title": "CandidateFactType",
+        "description": "Supported screening-relevant fact categories."
       },
       "CandidateListResponse": {
         "properties": {
@@ -4217,6 +6307,75 @@
         "title": "CandidateSource",
         "description": "How a candidate record came into existence."
       },
+      "CandidateSummaryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "screening_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Screening Run Id"
+          },
+          "revision_number": {
+            "type": "integer",
+            "title": "Revision Number"
+          },
+          "quality_status": {
+            "type": "string",
+            "title": "Quality Status"
+          },
+          "summary_text": {
+            "type": "string",
+            "title": "Summary Text"
+          },
+          "quality_issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quality Issues"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/SummaryClaimResponse"
+            },
+            "type": "array",
+            "title": "Claims"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "screening_run_id",
+          "revision_number",
+          "quality_status",
+          "summary_text",
+          "quality_issues",
+          "created_by",
+          "created_at",
+          "claims"
+        ],
+        "title": "CandidateSummaryResponse"
+      },
       "CertificationPresentConfig": {
         "properties": {
           "criterion_type": {
@@ -4268,6 +6427,27 @@
         ],
         "title": "CertificationPresentConfig",
         "description": "Configuration for CERTIFICATION_PRESENT criterion."
+      },
+      "CompleteInterviewPayload": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "title": "Outcome",
+            "description": "COMPLETED or NO_SHOW."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Reason",
+            "description": "Mandatory recruiter observation or policy explanation."
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome",
+          "reason"
+        ],
+        "title": "CompleteInterviewPayload"
       },
       "ComponentHealth": {
         "properties": {
@@ -4577,6 +6757,185 @@
         ],
         "title": "CreateCandidateResponse",
         "description": "Candidate creation result including conservative, minimum-exposure duplicates."
+      },
+      "CreateExternalActionRequest": {
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "title": "Action Type",
+            "description": "Action to execute e.g. CREATE_INTERVIEW or SEND_AVAILABILITY_REQUEST."
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type",
+            "default": "interview_request"
+          },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id",
+            "description": "Target aggregate ID e.g. interview_request ID."
+          },
+          "resource_version": {
+            "type": "integer",
+            "title": "Resource Version",
+            "default": 1
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id",
+            "description": "Required for CREATE_INTERVIEW."
+          },
+          "connection_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connection Id"
+          },
+          "custom_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_type",
+          "resource_id"
+        ],
+        "title": "CreateExternalActionRequest"
+      },
+      "CreateInterviewRequestPayload": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id",
+            "description": "Eligible candidate application ID (must be INTERVIEW_APPROVED)."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Title of interview round e.g. Technical Screen."
+          },
+          "target_date_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date Start",
+            "description": "Scheduling window opening timestamp."
+          },
+          "target_date_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date End",
+            "description": "Scheduling window closing timestamp."
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "maximum": 240.0,
+            "minimum": 15.0,
+            "title": "Duration Minutes",
+            "description": "Interview duration in minutes.",
+            "default": 45
+          },
+          "location_type": {
+            "type": "string",
+            "title": "Location Type",
+            "description": "GOOGLE_MEET, PHONE, or IN_PERSON.",
+            "default": "GOOGLE_MEET"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA timezone identifier e.g. America/New_York.",
+            "default": "UTC"
+          },
+          "working_hours_start": {
+            "type": "integer",
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Working Hours Start",
+            "default": 9
+          },
+          "working_hours_end": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Working Hours End",
+            "default": 17
+          },
+          "working_days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Working Days"
+          },
+          "buffer_before_minutes": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Buffer Before Minutes",
+            "default": 10
+          },
+          "buffer_after_minutes": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Buffer After Minutes",
+            "default": 10
+          },
+          "minimum_lead_time_hours": {
+            "type": "integer",
+            "maximum": 168.0,
+            "minimum": 0.0,
+            "title": "Minimum Lead Time Hours",
+            "default": 24
+          },
+          "interviewer_membership_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interviewer Membership Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "title",
+          "target_date_start",
+          "target_date_end"
+        ],
+        "title": "CreateInterviewRequestPayload"
       },
       "CreateInvitationRequest": {
         "properties": {
@@ -5011,6 +7370,41 @@
         "title": "DegreeLevel",
         "description": "Explicit, hierarchical educational attainment levels."
       },
+      "DeriveCandidateFactRequest": {
+        "properties": {
+          "fact_type": {
+            "$ref": "#/components/schemas/CandidateFactType"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Value"
+          },
+          "polarity": {
+            "$ref": "#/components/schemas/CandidateFactPolarity",
+            "default": "AFFIRMED"
+          },
+          "evidence_fragment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Evidence Fragment Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fact_type",
+          "value",
+          "evidence_fragment_ids"
+        ],
+        "title": "DeriveCandidateFactRequest"
+      },
       "DocumentResponse": {
         "properties": {
           "id": {
@@ -5389,6 +7783,90 @@
         "title": "EvidenceFragmentResponse",
         "description": "GET /evidence/{id}"
       },
+      "ExternalActionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "action_type": {
+            "type": "string",
+            "title": "Action Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type"
+          },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
+          "resource_version": {
+            "type": "integer",
+            "title": "Resource Version"
+          },
+          "payload": {
+            "type": "object",
+            "title": "Payload"
+          },
+          "payload_hash": {
+            "type": "string",
+            "title": "Payload Hash"
+          },
+          "verified_recipient_email": {
+            "type": "string",
+            "title": "Verified Recipient Email"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "action_type",
+          "status",
+          "resource_type",
+          "resource_id",
+          "resource_version",
+          "payload",
+          "payload_hash",
+          "verified_recipient_email",
+          "expires_at",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExternalActionResponse"
+      },
       "ExtractionRunSummaryResponse": {
         "properties": {
           "id": {
@@ -5554,6 +8032,116 @@
         "title": "ExtractionRunSummaryResponse",
         "description": "Status/quality summary for one extraction run -- no segment text included."
       },
+      "GenerateProposalsRequest": {
+        "properties": {
+          "step_minutes": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 5.0,
+            "title": "Step Minutes",
+            "default": 15
+          },
+          "max_proposals": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Proposals",
+            "default": 5
+          }
+        },
+        "type": "object",
+        "title": "GenerateProposalsRequest"
+      },
+      "GenerateSummaryRequest": {
+        "properties": {
+          "screening_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Screening Run Id"
+          },
+          "draft_claims": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SummaryClaimDraft"
+                },
+                "type": "array",
+                "maxItems": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Claims"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "screening_run_id"
+        ],
+        "title": "GenerateSummaryRequest"
+      },
+      "GoogleAuthorizeRequest": {
+        "properties": {
+          "requested_capabilities": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Capabilities",
+            "description": "Optional specific capability keys: freebusy, calendar_events, gmail_send."
+          },
+          "redirect_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redirect Uri",
+            "description": "Optional allowlisted redirect URI override."
+          }
+        },
+        "type": "object",
+        "title": "GoogleAuthorizeRequest"
+      },
+      "GoogleAuthorizeResponse": {
+        "properties": {
+          "authorization_url": {
+            "type": "string",
+            "title": "Authorization Url",
+            "description": "Google OAuth 2.0 authorization URL."
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "Cryptographic OAuth state string."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At",
+            "description": "State expiration timestamp."
+          }
+        },
+        "type": "object",
+        "required": [
+          "authorization_url",
+          "state",
+          "expires_at"
+        ],
+        "title": "GoogleAuthorizeResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -5600,6 +8188,164 @@
         ],
         "title": "HealthStatusResponse"
       },
+      "IntegrationConnectionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "owner_membership_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Membership Id"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "provider_subject": {
+            "type": "string",
+            "title": "Provider Subject"
+          },
+          "verified_email": {
+            "type": "string",
+            "title": "Verified Email"
+          },
+          "granted_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Granted Scopes"
+          },
+          "connection_status": {
+            "type": "string",
+            "title": "Connection Status"
+          },
+          "token_expiry": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Token Expiry"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code"
+          },
+          "connected_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Connected At"
+          },
+          "disconnected_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disconnected At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "owner_membership_id",
+          "provider",
+          "provider_subject",
+          "verified_email",
+          "granted_scopes",
+          "connection_status",
+          "token_expiry",
+          "connected_at"
+        ],
+        "title": "IntegrationConnectionResponse"
+      },
+      "IntegrationListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationConnectionResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_count"
+        ],
+        "title": "IntegrationListResponse"
+      },
+      "InterviewDetailResponse": {
+        "properties": {
+          "interview": {
+            "$ref": "#/components/schemas/InterviewResponse"
+          },
+          "current_revision": {
+            "$ref": "#/components/schemas/InterviewRevisionResponse"
+          },
+          "all_revisions": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewRevisionResponse"
+            },
+            "type": "array",
+            "title": "All Revisions"
+          },
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          },
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponse"
+            },
+            "type": "array",
+            "title": "Notifications"
+          },
+          "reminders": {
+            "items": {
+              "$ref": "#/components/schemas/ReminderScheduleResponse"
+            },
+            "type": "array",
+            "title": "Reminders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "interview",
+          "current_revision",
+          "all_revisions",
+          "reservations",
+          "notifications",
+          "reminders"
+        ],
+        "title": "InterviewDetailResponse"
+      },
       "InterviewEligibilityResponse": {
         "properties": {
           "application_id": {
@@ -5626,6 +8372,410 @@
         ],
         "title": "InterviewEligibilityResponse",
         "description": "Deterministic interview eligibility query result for later scheduling modules."
+      },
+      "InterviewRequestResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "location_type": {
+            "type": "string",
+            "title": "Location Type"
+          },
+          "organizer_membership_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organizer Membership Id"
+          },
+          "target_date_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date Start"
+          },
+          "target_date_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date End"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "application_id",
+          "candidate_id",
+          "job_id",
+          "title",
+          "duration_minutes",
+          "status",
+          "location_type",
+          "organizer_membership_id",
+          "target_date_start",
+          "target_date_end",
+          "timezone",
+          "created_at",
+          "version"
+        ],
+        "title": "InterviewRequestResponse"
+      },
+      "InterviewReservationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "membership_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Membership Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "slot_start_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot Start Utc"
+          },
+          "slot_end_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot End Utc"
+          },
+          "interview_start_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Interview Start Utc"
+          },
+          "interview_end_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Interview End Utc"
+          },
+          "release_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "interview_id",
+          "membership_id",
+          "status",
+          "slot_start_utc",
+          "slot_end_utc",
+          "interview_start_utc",
+          "interview_end_utc"
+        ],
+        "title": "InterviewReservationResponse"
+      },
+      "InterviewResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "interview_request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Request Id"
+          },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "job_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Id"
+          },
+          "organizer_membership_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organizer Membership Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "location_type": {
+            "type": "string",
+            "title": "Location Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "google_calendar_event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Google Calendar Event Id"
+          },
+          "google_meet_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Google Meet Link"
+          },
+          "google_calendar_html_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Google Calendar Html Link"
+          },
+          "external_event_etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Event Etag"
+          },
+          "current_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Revision Id"
+          },
+          "completion_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Reason"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "interview_request_id",
+          "application_id",
+          "candidate_id",
+          "job_id",
+          "organizer_membership_id",
+          "title",
+          "location_type",
+          "status",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InterviewResponse"
+      },
+      "InterviewRevisionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "revision_number": {
+            "type": "integer",
+            "title": "Revision Number"
+          },
+          "slot_start_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot Start Utc"
+          },
+          "slot_end_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot End Utc"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "provider_etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Etag"
+          },
+          "external_event_status": {
+            "type": "string",
+            "title": "External Event Status"
+          },
+          "candidate_confirmation_status": {
+            "type": "string",
+            "title": "Candidate Confirmation Status"
+          },
+          "candidate_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Confirmed At"
+          },
+          "candidate_change_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Change Reason"
+          },
+          "participant_rsvp_snapshot": {
+            "type": "object",
+            "title": "Participant Rsvp Snapshot"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "interview_id",
+          "revision_number",
+          "slot_start_utc",
+          "slot_end_utc",
+          "timezone",
+          "external_event_status",
+          "candidate_confirmation_status",
+          "participant_rsvp_snapshot",
+          "created_at"
+        ],
+        "title": "InterviewRevisionResponse"
       },
       "InvitationResponse": {
         "properties": {
@@ -5673,6 +8823,32 @@
         ],
         "title": "InvitationResponse",
         "description": "Invitation details response."
+      },
+      "IssueAvailabilityLinkResponse": {
+        "properties": {
+          "availability_url": {
+            "type": "string",
+            "title": "Availability Url",
+            "description": "Single-use public scheduling link for candidate."
+          },
+          "link_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Link Id"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "availability_url",
+          "link_id",
+          "expires_at"
+        ],
+        "title": "IssueAvailabilityLinkResponse"
       },
       "JobAssignmentResponse": {
         "properties": {
@@ -6165,6 +9341,75 @@
         "title": "MinExperienceMonthsConfig",
         "description": "Configuration for MIN_EXPERIENCE_MONTHS criterion."
       },
+      "NotificationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email"
+          },
+          "notification_type": {
+            "type": "string",
+            "title": "Notification Type"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "provider_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Message Id"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "interview_id",
+          "recipient_email",
+          "notification_type",
+          "channel",
+          "status",
+          "created_at"
+        ],
+        "title": "NotificationResponse"
+      },
       "OperationResponse": {
         "properties": {
           "operation_id": {
@@ -6298,6 +9543,99 @@
         "title": "OrganizationResponse",
         "description": "Organization summary with caller's membership role."
       },
+      "PublicChangeRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Opaque candidate link token."
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Reason",
+            "description": "Reason for requesting schedule change."
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "interview_id",
+          "reason"
+        ],
+        "title": "PublicChangeRequest"
+      },
+      "PublicConfirmInterviewRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "Opaque candidate link token."
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision",
+            "description": "CONFIRMED or DECLINED."
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "interview_id",
+          "decision"
+        ],
+        "title": "PublicConfirmInterviewRequest"
+      },
+      "PublicInterviewDetailsResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "target_date_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date Start"
+          },
+          "target_date_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Date End"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company_name",
+          "duration_minutes",
+          "target_date_start",
+          "target_date_end",
+          "timezone"
+        ],
+        "title": "PublicInterviewDetailsResponse"
+      },
       "PublishRequirementsRequest": {
         "properties": {
           "change_summary": {
@@ -6329,6 +9667,70 @@
         "title": "PublishRequirementsRequest",
         "description": "Payload to snapshot and publish draft requirements."
       },
+      "ReminderScheduleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "interview_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Id"
+          },
+          "interview_revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Revision Id"
+          },
+          "reminder_kind": {
+            "type": "string",
+            "title": "Reminder Kind"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          },
+          "recipient_email": {
+            "type": "string",
+            "title": "Recipient Email"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "skip_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skip Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "interview_id",
+          "interview_revision_id",
+          "reminder_kind",
+          "scheduled_for",
+          "recipient_email",
+          "status",
+          "created_at"
+        ],
+        "title": "ReminderScheduleResponse"
+      },
       "ReprocessDocumentRequest": {
         "properties": {
           "version_number": {
@@ -6357,6 +9759,49 @@
         ],
         "title": "ReprocessDocumentResponse",
         "description": "POST /documents/{id}/reprocess"
+      },
+      "RequestCancellationPayload": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Reason",
+            "description": "Operational reason for cancellation."
+          },
+          "send_updates": {
+            "type": "boolean",
+            "title": "Send Updates",
+            "description": "Whether to dispatch provider updates to attendees.",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "RequestCancellationPayload"
+      },
+      "RequestReschedulePayload": {
+        "properties": {
+          "new_slot_proposal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "New Slot Proposal Id",
+            "description": "Approved replacement SlotProposal ID."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Reason",
+            "description": "Operational reason for reschedule."
+          }
+        },
+        "type": "object",
+        "required": [
+          "new_slot_proposal_id",
+          "reason"
+        ],
+        "title": "RequestReschedulePayload"
       },
       "RequirementVersionResponse": {
         "properties": {
@@ -6430,6 +9875,328 @@
         "title": "RequirementVersionResponse",
         "description": "Snapshot of a published requirement version."
       },
+      "ResolveExternalActionRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "title": "Decision",
+            "description": "REJECT, CANCEL, or FORCE_RELEASE."
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Operational rationale for resolution."
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision",
+          "reason"
+        ],
+        "title": "ResolveExternalActionRequest"
+      },
+      "ReviewCandidateFactRequest": {
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Revision"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CandidateFactStatus"
+          },
+          "corrected_value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrected Value"
+          },
+          "polarity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CandidateFactPolarity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review_note": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Review Note",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision",
+          "status"
+        ],
+        "title": "ReviewCandidateFactRequest"
+      },
+      "ScreeningFactCitationResponse": {
+        "properties": {
+          "fact_revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fact Revision Id"
+          },
+          "evidence_fragment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Evidence Fragment Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fact_revision_id",
+          "evidence_fragment_ids"
+        ],
+        "title": "ScreeningFactCitationResponse"
+      },
+      "ScreeningOutcome": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "FAIL",
+          "UNKNOWN"
+        ],
+        "title": "ScreeningOutcome"
+      },
+      "ScreeningOverrideRequest": {
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "outcome",
+          "reason"
+        ],
+        "title": "ScreeningOverrideRequest"
+      },
+      "ScreeningOverrideResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "revision_number": {
+            "type": "integer",
+            "title": "Revision Number"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Actor Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "revision_number",
+          "outcome",
+          "reason",
+          "actor_id",
+          "created_at"
+        ],
+        "title": "ScreeningOverrideResponse"
+      },
+      "ScreeningOverridesResponse": {
+        "properties": {
+          "screening_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Screening Run Id"
+          },
+          "original_outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "overrides": {
+            "items": {
+              "$ref": "#/components/schemas/ScreeningOverrideResponse"
+            },
+            "type": "array",
+            "title": "Overrides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "screening_run_id",
+          "original_outcome",
+          "overrides"
+        ],
+        "title": "ScreeningOverridesResponse"
+      },
+      "ScreeningResultResponse": {
+        "properties": {
+          "criterion_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Criterion Id"
+          },
+          "criterion_type": {
+            "type": "string",
+            "title": "Criterion Type"
+          },
+          "is_required": {
+            "type": "boolean",
+            "title": "Is Required"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/ScreeningFactCitationResponse"
+            },
+            "type": "array",
+            "title": "Citations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "criterion_id",
+          "criterion_type",
+          "is_required",
+          "outcome",
+          "explanation",
+          "citations"
+        ],
+        "title": "ScreeningResultResponse"
+      },
+      "ScreeningRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "application_document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Document Id"
+          },
+          "document_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version Id"
+          },
+          "requirement_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Requirement Version Id"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "effective_outcome": {
+            "$ref": "#/components/schemas/ScreeningOutcome"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ScreeningResultResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "latest_override": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScreeningOverrideResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "candidate_id",
+          "application_document_id",
+          "document_version_id",
+          "requirement_version_id",
+          "outcome",
+          "effective_outcome",
+          "rule_version",
+          "created_at",
+          "results",
+          "latest_override"
+        ],
+        "title": "ScreeningRunResponse"
+      },
       "SkillPresentConfig": {
         "properties": {
           "criterion_type": {
@@ -6484,6 +10251,74 @@
         ],
         "title": "SkillPresentConfig",
         "description": "Configuration for SKILL_PRESENT criterion."
+      },
+      "SlotProposalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "interview_request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Interview Request Id"
+          },
+          "slot_start_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot Start Utc"
+          },
+          "slot_end_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Slot End Utc"
+          },
+          "interviewer_membership_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Interviewer Membership Ids"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "invalidation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalidation Reason"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "interview_request_id",
+          "slot_start_utc",
+          "slot_end_utc",
+          "interviewer_membership_ids",
+          "status",
+          "expires_at",
+          "created_at"
+        ],
+        "title": "SlotProposalResponse"
       },
       "SourceSegmentResponse": {
         "properties": {
@@ -6710,6 +10545,97 @@
         ],
         "title": "StatusTransitionRequest",
         "description": "Payload to transition job lifecycle status."
+      },
+      "SubmitAvailabilityRequest": {
+        "properties": {
+          "candidate_timezone": {
+            "type": "string",
+            "title": "Candidate Timezone",
+            "description": "Candidate local timezone.",
+            "default": "UTC"
+          },
+          "available_intervals": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityIntervalItem"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Available Intervals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available_intervals"
+        ],
+        "title": "SubmitAvailabilityRequest"
+      },
+      "SummaryClaimDraft": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "fact_revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fact Revision Id"
+          },
+          "evidence_fragment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Evidence Fragment Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "fact_revision_id",
+          "evidence_fragment_ids"
+        ],
+        "title": "SummaryClaimDraft",
+        "description": "Untrusted generated claim and its proposed fact/evidence citations."
+      },
+      "SummaryClaimResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "fact_revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Fact Revision Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "evidence_fragment_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Evidence Fragment Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fact_revision_id",
+          "text",
+          "evidence_fragment_ids"
+        ],
+        "title": "SummaryClaimResponse"
       },
       "TeamResponse": {
         "properties": {

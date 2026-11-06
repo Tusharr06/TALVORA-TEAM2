@@ -70,6 +70,15 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "candidate_summary_revision" in tables
         assert "candidate_summary_claim" in tables
         assert "candidate_summary_citation" in tables
+        assert "integration_connection" in tables
+        assert "integration_oauth_transaction" in tables
+        assert "interview_request" in tables
+        assert "interview_participant" in tables
+        assert "candidate_availability_link" in tables
+        assert "availability_submission" in tables
+        assert "availability_snapshot" in tables
+        assert "slot_proposal" in tables
+        assert "internal_reservation" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -106,6 +115,15 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "candidate_summary_revision" not in remaining_tables
         assert "candidate_summary_claim" not in remaining_tables
         assert "candidate_summary_citation" not in remaining_tables
+        assert "integration_connection" not in remaining_tables
+        assert "integration_oauth_transaction" not in remaining_tables
+        assert "internal_reservation" not in remaining_tables
+        assert "slot_proposal" not in remaining_tables
+        assert "availability_snapshot" not in remaining_tables
+        assert "availability_submission" not in remaining_tables
+        assert "candidate_availability_link" not in remaining_tables
+        assert "interview_participant" not in remaining_tables
+        assert "interview_request" not in remaining_tables
         fresh_engine.dispose()
 
     finally:
