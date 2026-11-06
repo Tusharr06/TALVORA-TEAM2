@@ -56,6 +56,17 @@ class Settings(BaseSettings):
     upload_stream_chunk_bytes: int = Field(default=256 * 1024)
     object_receipt_orphan_grace_minutes: int = Field(default=30)
 
+    # --- Evidence Extraction (P07): bounded PDF/DOCX parsing and OCR ---
+    extraction_max_pdf_pages: int = Field(default=30)
+    extraction_max_characters: int = Field(default=200_000)
+    extraction_min_digital_text_chars_per_page: int = Field(default=20)
+    tesseract_cmd: str = Field(default="tesseract")
+    ocr_language: str = Field(default="eng")
+    ocr_dpi: int = Field(default=200)
+    ocr_page_timeout_seconds: float = Field(default=20.0)
+    ocr_max_pages_per_document: int = Field(default=10)
+    ocr_min_confidence_threshold: float = Field(default=60.0)
+
     # --- Malware Scanning (ClamAV clamd daemon) ---
     clamav_host: str = Field(default="localhost")
     clamav_port: int = Field(default=3310)

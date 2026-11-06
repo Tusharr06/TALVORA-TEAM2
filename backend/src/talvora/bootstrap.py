@@ -85,6 +85,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         app.state.virus_scanner = ClamdScanner.from_settings(effective_settings)
 
+    # Document extraction (P07): a real pypdf/python-docx + bounded pypdfium2/
+    # Tesseract-OCR composite adapter unless the host application has already
+    # injected a test double before this call.
+    if not hasattr(app.state, "document_extractor"):
+        from talvora.modules.evidence.application.extractor import CompositeDocumentExtractor
+
+        app.state.document_extractor = CompositeDocumentExtractor.from_settings(effective_settings)
+
     # 1. Register RFC 7807 problem exception handlers
     register_exception_handlers(app)
 
@@ -122,6 +130,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from talvora.modules.candidates.api.routes import router as candidates_router
     from talvora.modules.documents.api.routes import application_bindings_router, documents_router
     from talvora.modules.documents.api.routes import router as upload_batches_router
+    from talvora.modules.evidence.api.routes import evidence_documents_router, evidence_router
     from talvora.modules.identity.api.routes import router as auth_router
     from talvora.modules.jobs.api.routes import router as jobs_router
     from talvora.modules.operations.api.routes import router as operations_router
@@ -138,5 +147,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(upload_batches_router)
     app.include_router(documents_router)
     app.include_router(application_bindings_router)
+    app.include_router(evidence_documents_router)
+    app.include_router(evidence_router)
 
     return app

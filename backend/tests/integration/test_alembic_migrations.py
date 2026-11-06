@@ -58,6 +58,9 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "document_version" in tables
         assert "object_receipt" in tables
         assert "application_document" in tables
+        assert "extraction_run" in tables
+        assert "source_segment" in tables
+        assert "evidence_fragment" in tables
 
         # 2. Run downgrade base
         command.downgrade(alembic_cfg, "base")
@@ -82,6 +85,9 @@ def test_alembic_migration_upgrade_and_downgrade() -> None:
         assert "document_version" not in remaining_tables
         assert "object_receipt" not in remaining_tables
         assert "application_document" not in remaining_tables
+        assert "extraction_run" not in remaining_tables
+        assert "source_segment" not in remaining_tables
+        assert "evidence_fragment" not in remaining_tables
         fresh_engine.dispose()
 
     finally:

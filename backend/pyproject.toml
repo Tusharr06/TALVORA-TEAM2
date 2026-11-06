@@ -18,6 +18,10 @@ dependencies = [
     "authlib>=1.4.1,<1.5.0",
     "defusedxml>=0.7.1,<0.8.0",
     "python-multipart>=0.0.20,<0.1.0",
+    "pypdf>=5.1.0,<5.2.0",
+    "python-docx>=1.1.2,<1.2.0",
+    "pypdfium2>=4.28.0,<5.1.0",
+    "pillow>=11.0.0,<12.0.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +34,7 @@ dev = [
     "moto[server,s3,sqs]>=5.0.28",
     "types-boto3>=1.36.10",
     "aiosqlite>=0.20.0",
+    "reportlab>=4.2.5,<4.3.0",
 ]
 
 [build-system]
@@ -62,6 +67,10 @@ warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = "defusedxml.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pypdfium2.*", "reportlab.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

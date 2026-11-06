@@ -29,12 +29,9 @@ from talvora.modules.documents.domain.models import (
     UploadItem,
     UploadItemStatus,
 )
-from talvora.modules.operations.domain.models import (
-    JobOperation,
-    OperationStatus,
-    OutboxEvent,
-    OutboxStatus,
-)
+from talvora.modules.evidence.application.service import ExtractionAdmissionService
+from talvora.modules.evidence.domain.models import ExtractionTriggerKind
+from talvora.modules.operations.domain.models import JobOperation, OperationStatus
 from talvora.shared.domain.clock import Clock, SystemClock
 from talvora.workers.task_handlers import StaleFencingTokenError, TaskExecutionManager
 
@@ -155,16 +152,20 @@ class DocumentScanWorker:
         item.problem_detail = None
         item.next_action = None
         item.version += 1
-
-        outbox = OutboxEvent(
-            tenant_id=tenant_id,
-            topic="documents.extraction_requested",
-            payload_ref=doc_version.id,
-            status=OutboxStatus.PENDING.value,
-            created_at=self.clock.now(),
-        )
-        session.add(outbox)
         session.flush()
+
+        # Request the first extraction revision for this now-clean version (P07). This
+        # creates the durable JobOperation an ExtractionWorker claims/fences exactly
+        # like this scan operation was claimed/fenced -- never a bare, unclaimable
+        # outbox signal.
+        ExtractionAdmissionService.request_extraction(
+            session=session,
+            tenant_id=tenant_id,
+            document_id=doc_version.document_id,
+            document_version=doc_version,
+            triggered_by=ExtractionTriggerKind.SYSTEM_SCAN_CLEAN,
+            clock=self.clock,
+        )
 
         try:
             return self.manager.finalize_job(

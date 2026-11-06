@@ -48,6 +48,8 @@ from talvora.modules.documents.domain.models import (
     generate_opaque_storage_key,
     sanitize_display_filename,
 )
+from talvora.modules.evidence.application.service import ExtractionAdmissionService
+from talvora.modules.evidence.domain.models import ExtractionTriggerKind
 from talvora.modules.identity.domain.roles import Capability, Role
 from talvora.modules.jobs.application.service import JobService
 from talvora.modules.jobs.domain.models import JobRole, JobStatus
@@ -662,10 +664,19 @@ class UploadItemService:
                     resource_type="document_version",
                     resource_id=doc_version.id,
                 )
-                # Publish the same next-phase signal a fresh clean scan would, without
-                # pretending extraction already happened.
-                uow.record_outbox_event(
-                    topic="documents.extraction_requested", payload_ref=doc_version.id
+                # Request extraction for this new version the same way a fresh clean
+                # scan would (P07) -- without pretending extraction already happened,
+                # even though the underlying bytes are checksum-identical to another
+                # already-extracted version. Each document version keeps its own,
+                # independently auditable extraction/citation chain; this reuse path
+                # knowingly accepts duplicate extraction work on identical bytes
+                # rather than silently borrowing another version's citations.
+                ExtractionAdmissionService.request_extraction(
+                    session=uow.session,
+                    tenant_id=tenant_id,
+                    document_id=document.id,
+                    document_version=doc_version,
+                    triggered_by=ExtractionTriggerKind.CONTENT_REUSE,
                 )
             else:
                 item.status = UploadItemStatus.SCANNING.value

@@ -3493,6 +3493,235 @@
           }
         }
       }
+    },
+    "/api/v1/documents/{id}/versions/{version_number}/source": {
+      "get": {
+        "tags": [
+          "Evidence"
+        ],
+        "summary": "Get Document Source",
+        "description": "Source-addressable text for one immutable document version.\n\nOnly a `SUCCEEDED`/`PARTIAL` run's segments are ever included; a `PENDING`/\n`RUNNING`/`NEEDS_REVIEW`/`FAILED` run is reported via `extraction` with an empty\n`segments` list -- a bounded partial extraction is never presented as a full\ncandidate history, and an incomplete/unreadable one is never presented as text.",
+        "operationId": "get_document_source_api_v1_documents__id__versions__version_number__source_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "version_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Version Number"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSourceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/versions/{version_number}/extraction": {
+      "get": {
+        "tags": [
+          "Evidence"
+        ],
+        "summary": "Get Extraction Status",
+        "description": "Latest extraction run's status/quality summary -- no source text.",
+        "operationId": "get_extraction_status_api_v1_documents__id__versions__version_number__extraction_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "version_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Version Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExtractionRunSummaryResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Extraction Status Api V1 Documents  Id  Versions  Version Number  Extraction Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/reprocess": {
+      "post": {
+        "tags": [
+          "Evidence"
+        ],
+        "summary": "Reprocess Document",
+        "description": "Explicitly request a new extraction revision for a clean document version.\n\nAlways creates a new, independent `ExtractionRun` revision -- it never mutates an\nexisting run's segments/fragments, and it never changes which version is bound to\nany application (that remains a separate, explicit `document-bindings` command).",
+        "operationId": "reprocess_document_api_v1_documents__id__reprocess_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprocessDocumentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReprocessDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/{id}": {
+      "get": {
+        "tags": [
+          "Evidence"
+        ],
+        "summary": "Get Evidence Fragment",
+        "description": "One immutable, hash-and-substring-verified evidence fragment.\n\nTenant-scoped lookup: a fragment ID from another tenant always 404s, never\nrevealing cross-tenant existence.",
+        "operationId": "get_evidence_fragment_api_v1_evidence__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceFragmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4836,6 +5065,50 @@
         ],
         "title": "DocumentResponse"
       },
+      "DocumentSourceResponse": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "document_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Version Id"
+          },
+          "version_number": {
+            "type": "integer",
+            "title": "Version Number"
+          },
+          "extraction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtractionRunSummaryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSegmentResponse"
+            },
+            "type": "array",
+            "title": "Segments"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "document_version_id",
+          "version_number",
+          "segments"
+        ],
+        "title": "DocumentSourceResponse",
+        "description": "GET /documents/{id}/versions/{version}/source"
+      },
       "DocumentVersionResponse": {
         "properties": {
           "id": {
@@ -5000,6 +5273,286 @@
         ],
         "title": "EducationLevelConfig",
         "description": "Configuration for EDUCATION_LEVEL criterion."
+      },
+      "EvidenceFragmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "document_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Version Id"
+          },
+          "source_segment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Segment Id"
+          },
+          "extraction_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Extraction Run Id"
+          },
+          "start_offset": {
+            "type": "integer",
+            "title": "Start Offset"
+          },
+          "end_offset": {
+            "type": "integer",
+            "title": "End Offset"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          },
+          "canonical_text_sha256": {
+            "type": "string",
+            "title": "Canonical Text Sha256"
+          },
+          "extraction_method": {
+            "type": "string",
+            "title": "Extraction Method"
+          },
+          "locator_type": {
+            "type": "string",
+            "title": "Locator Type"
+          },
+          "page_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Number"
+          },
+          "docx_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Docx Path"
+          },
+          "is_low_confidence": {
+            "type": "boolean",
+            "title": "Is Low Confidence"
+          },
+          "ocr_mean_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Mean Confidence"
+          },
+          "segment_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Segment Warnings"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "document_version_id",
+          "source_segment_id",
+          "extraction_run_id",
+          "start_offset",
+          "end_offset",
+          "quote",
+          "canonical_text_sha256",
+          "extraction_method",
+          "locator_type",
+          "is_low_confidence",
+          "segment_warnings",
+          "created_at"
+        ],
+        "title": "EvidenceFragmentResponse",
+        "description": "GET /evidence/{id}"
+      },
+      "ExtractionRunSummaryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Tenant Id"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Id"
+          },
+          "document_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Document Version Id"
+          },
+          "revision_number": {
+            "type": "integer",
+            "title": "Revision Number"
+          },
+          "extractor_version": {
+            "type": "string",
+            "title": "Extractor Version"
+          },
+          "normalization_version": {
+            "type": "string",
+            "title": "Normalization Version"
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "problem_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem Code"
+          },
+          "is_complete": {
+            "type": "boolean",
+            "title": "Is Complete"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "error_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Detail"
+          },
+          "total_pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Pages"
+          },
+          "processed_pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processed Pages"
+          },
+          "ocr_pages_used": {
+            "type": "integer",
+            "title": "Ocr Pages Used"
+          },
+          "total_characters": {
+            "type": "integer",
+            "title": "Total Characters"
+          },
+          "triggered_by": {
+            "type": "string",
+            "title": "Triggered By"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "is_stale": {
+            "type": "boolean",
+            "title": "Is Stale",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "document_id",
+          "document_version_id",
+          "revision_number",
+          "extractor_version",
+          "normalization_version",
+          "media_type",
+          "status",
+          "is_complete",
+          "warnings",
+          "ocr_pages_used",
+          "total_characters",
+          "triggered_by",
+          "created_at"
+        ],
+        "title": "ExtractionRunSummaryResponse",
+        "description": "Status/quality summary for one extraction run -- no segment text included."
       },
       "HTTPValidationError": {
         "properties": {
@@ -5776,6 +6329,35 @@
         "title": "PublishRequirementsRequest",
         "description": "Payload to snapshot and publish draft requirements."
       },
+      "ReprocessDocumentRequest": {
+        "properties": {
+          "version_number": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version Number"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version_number"
+        ],
+        "title": "ReprocessDocumentRequest",
+        "description": "POST /documents/{id}/reprocess body: which version to reprocess."
+      },
+      "ReprocessDocumentResponse": {
+        "properties": {
+          "extraction_run": {
+            "$ref": "#/components/schemas/ExtractionRunSummaryResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "extraction_run"
+        ],
+        "title": "ReprocessDocumentResponse",
+        "description": "POST /documents/{id}/reprocess"
+      },
       "RequirementVersionResponse": {
         "properties": {
           "id": {
@@ -5902,6 +6484,96 @@
         ],
         "title": "SkillPresentConfig",
         "description": "Configuration for SKILL_PRESENT criterion."
+      },
+      "SourceSegmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "segment_index": {
+            "type": "integer",
+            "title": "Segment Index"
+          },
+          "locator_type": {
+            "type": "string",
+            "title": "Locator Type"
+          },
+          "page_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Number"
+          },
+          "docx_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Docx Path"
+          },
+          "extraction_method": {
+            "type": "string",
+            "title": "Extraction Method"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "char_count": {
+            "type": "integer",
+            "title": "Char Count"
+          },
+          "canonical_text_sha256": {
+            "type": "string",
+            "title": "Canonical Text Sha256"
+          },
+          "is_low_confidence": {
+            "type": "boolean",
+            "title": "Is Low Confidence"
+          },
+          "ocr_mean_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Mean Confidence"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "segment_index",
+          "locator_type",
+          "extraction_method",
+          "text",
+          "char_count",
+          "canonical_text_sha256",
+          "is_low_confidence",
+          "warnings"
+        ],
+        "title": "SourceSegmentResponse"
       },
       "StageEventResponse": {
         "properties": {
