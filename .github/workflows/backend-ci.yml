@@ -81,6 +81,11 @@ jobs:
         run: |
           uv run mypy src/ tests/
 
+      - name: Apply Alembic Migrations
+        working-directory: ./backend
+        run: |
+          uv run alembic upgrade head
+
       - name: Wait for ClamAV Virus Database to Load
         run: |
           for i in $(seq 1 30); do
