@@ -69,6 +69,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = effective_settings
     app.state.db_manager = DatabaseManager(effective_settings)
 
+    # One mock identity client for the process. A new client per request forgets the
+    # PKCE grant before the browser can call the callback. Tests replace this.
+    if effective_settings.allow_dev_identity_adapter and not hasattr(app.state, "oidc_client"):
+        from talvora.modules.identity.infrastructure.oidc import MockOidcClient
+
+        app.state.oidc_client = MockOidcClient(
+            issuer=effective_settings.oidc_issuer,
+            client_id=effective_settings.oidc_client_id,
+        )
+
     # Object storage: a real S3/Moto-backed adapter unless the host application has
     # already injected a test double (e.g. InMemoryObjectStorageAdapter) before this
     # call. Constructing a boto3 client performs no network I/O; bucket existence is

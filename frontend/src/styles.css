@@ -576,8 +576,22 @@ button.ticket {
 .dot { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--copper); box-shadow: 0 0 0 4px rgba(227, 138, 69, 0.15); }
 .choices, .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .field { display: grid; gap: 8px; margin: 12px 0; color: var(--paper-dim); font-size: 0.92rem; }
-.field textarea { min-height: 96px; resize: vertical; width: 100%; }
-.field input, .field select, .field textarea { width: 100%; }
+.field textarea { min-height: 96px; resize: vertical; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: rgba(9, 10, 14, 0.55);
+  color: var(--paper);
+  font: inherit;
+  padding: 10px 12px;
+}
+.banner {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(227, 138, 69, 0.45);
+}
+.session-gate { max-width: 560px; display: grid; gap: 12px; }
+.menu button span { color: var(--paper-dim); font-size: 0.88rem; }
 .write-stage .btn, .field .btn { justify-self: start; }
 
 .email { font-family: var(--display); font-size: 1.8rem; letter-spacing: -0.03em; overflow-wrap: anywhere; }

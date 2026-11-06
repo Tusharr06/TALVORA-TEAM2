@@ -7,358 +7,437 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  BATCH_ITEM_LIMIT,
-  applicationSeed,
-  candidateSeed,
-  intakeSeed,
-  jobById,
-  type Application,
-  type Candidate,
-  type IntakeItem,
-  type IntakeStatus,
-} from "./data";
-import {
-  ALLOWED,
-  ROLE_CAPS,
-  needsReason,
-  pretty,
-  type Cap,
-  type Role,
-  type Stage,
-} from "./format";
+import { ApiError, api, clearCsrf, startLogin } from "./api";
 
-const STORAGE_KEY = "talvora-desk-preview";
-
-type Persisted = {
-  role: Role;
-  candidates: Candidate[];
-  applications: Application[];
-  intake: IntakeItem[];
-  reviewedRuns: string[];
-  dismissedDupes: string[];
+export type Me = {
+  user_id: string;
+  email: string;
+  active_organization_id: string | null;
+  role: string | null;
+  capabilities: string[];
+  organizations: { id: string; name: string; slug: string; role: string }[];
 };
 
+export type Job = {
+  id: string;
+  title: string;
+  description: string;
+  department: string | null;
+  location: string | null;
+  employment_type: string;
+  status: string;
+  current_published_version_number: number | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RequirementVersion = {
+  id: string;
+  version_number: number;
+  title: string;
+  description: string;
+  published_at: string;
+  change_summary: string | null;
+  criteria: {
+    id: string;
+    criterion_type: string;
+    is_required: boolean;
+    source_requirement_text: string;
+    relevance_rationale: string;
+    configuration: { skill_name?: string };
+  }[];
+};
+
+export type Candidate = {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  phone: string | null;
+  source: string;
+  is_draft: boolean;
+  current_contact_revision_number: number;
+  is_contact_verified: boolean;
+  version: number;
+  created_at: string;
+};
+
+export type Application = {
+  id: string;
+  job_id: string;
+  candidate_id: string;
+  stage: string;
+  source: string;
+  notes: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StageEvent = {
+  id: string;
+  from_stage: string | null;
+  to_stage: string;
+  reason: string | null;
+  actor_role: string;
+  created_at: string;
+};
+
+export type HeldDocument = {
+  id: string;
+  filename: string;
+  version: number;
+  status: string;
+  problem_code: string | null;
+};
+
+export type SourceView = {
+  document_id: string;
+  version_number: number;
+  extraction: { status: string; problem_code: string | null; error_detail: string | null } | null;
+  segments: {
+    id: string;
+    page_number: number | null;
+    extraction_method: string;
+    text: string;
+  }[];
+};
+
+type Page<T> = { items: T[]; next_cursor: string | null; total_count: number };
+
+type Status = "loading" | "signed-out" | "ready" | "down";
+
+const DOC_KEY = "talvora-live-documents";
+let refreshInFlight: Promise<void> | null = null;
+
+function loadHeld(): HeldDocument[] {
+  try {
+    const raw = sessionStorage.getItem(DOC_KEY);
+    return raw ? (JSON.parse(raw) as HeldDocument[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function explain(error: unknown): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof Error) return error.message;
+  return "Something went wrong.";
+}
+
 type Workspace = {
-  role: Role;
-  setRole: (role: Role) => void;
+  status: Status;
+  me: Me | null;
+  jobs: Job[];
   candidates: Candidate[];
   applications: Application[];
-  intake: IntakeItem[];
-  reviewedRuns: string[];
-  dismissedDupes: string[];
+  documents: HeldDocument[];
   notice: string | null;
+  error: string | null;
+  can: (capability: string) => boolean;
   dismissNotice: () => void;
-  can: (cap: Cap) => boolean;
-  transition: (id: string, to: Stage, reason: string) => string | null;
-  attest: (candidateId: string, note: string) => string | null;
-  feedback: (id: string, body: string) => string | null;
-  admit: (jobId: string, files: FileList | File[]) => string | null;
-  stepIntake: () => void;
-  ackRun: (id: string) => void;
-  dismissDupe: (id: string) => void;
-  reset: () => void;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
+  createJob: (input: {
+    title: string;
+    description: string;
+    department: string;
+    location: string;
+    skill: string;
+    publish: boolean;
+  }) => Promise<void>;
+  createCandidate: (input: { display_name: string; email: string }) => Promise<void>;
+  attest: (candidate: Candidate, notes: string) => Promise<void>;
+  createApplication: (jobId: string, candidateId: string) => Promise<void>;
+  moveStage: (application: Application, target: string, reason: string) => Promise<void>;
+  uploadResume: (jobId: string, file: File) => Promise<void>;
+  loadVersions: (jobId: string) => Promise<RequirementVersion[]>;
+  loadHistory: (applicationId: string) => Promise<StageEvent[]>;
+  loadEligibility: (applicationId: string) => Promise<{ eligible: boolean; reasons: string[] }>;
+  loadSource: (documentId: string, version: number) => Promise<SourceView>;
 };
 
 const WorkspaceContext = createContext<Workspace | null>(null);
 
-function readPersisted(): Persisted | null {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as Partial<Persisted>;
-    if (!data.role || !(data.role in ROLE_CAPS)) return null;
-    if (!Array.isArray(data.candidates) || !Array.isArray(data.applications) || !Array.isArray(data.intake)) {
-      return null;
-    }
-    return {
-      role: data.role,
-      candidates: data.candidates,
-      applications: data.applications,
-      intake: data.intake,
-      reviewedRuns: Array.isArray(data.reviewedRuns) ? data.reviewedRuns : [],
-      dismissedDupes: Array.isArray(data.dismissedDupes) ? data.dismissedDupes : [],
-    };
-  } catch {
-    return null;
+async function ensureTenant(me: Me): Promise<Me> {
+  if (me.active_organization_id) return me;
+  let organizationId = me.organizations[0]?.id;
+  if (!organizationId) {
+    const created = await api<{ id: string }>("/api/v1/organizations", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Talvora",
+        slug: `talvora-${crypto.randomUUID().slice(0, 8)}`,
+      }),
+    });
+    organizationId = created.id;
   }
-}
-
-function advance(item: IntakeItem): IntakeItem {
-  const next: Partial<Record<IntakeStatus, IntakeStatus>> = {
-    RESERVED: "QUARANTINED",
-    QUARANTINED: "SCANNING",
-    SCANNING: item.verdict === "CLEAN" ? "CLEAN" : "BLOCKED",
-  };
-  const status = next[item.status];
-  if (!status) return item;
-  return { ...item, status };
-}
-
-function judge(file: File): Pick<IntakeItem, "verdict" | "problem" | "mediaType"> {
-  const name = file.name.toLowerCase();
-  if (file.size === 0) {
-    return { verdict: "BLOCKED", problem: "EMPTY_FILE", mediaType: file.type || "application/octet-stream" };
-  }
-  if (file.size > 8_000_000) {
-    return { verdict: "BLOCKED", problem: "FILE_TOO_LARGE", mediaType: file.type || "application/octet-stream" };
-  }
-  if (name.endsWith(".exe") || name.endsWith(".js") || name.includes("payload")) {
-    return {
-      verdict: "BLOCKED",
-      problem: "EMBEDDED_EXECUTABLE_BLOCKED",
-      mediaType: file.type || "application/octet-stream",
-    };
-  }
-  if (name.includes("macro") || name.endsWith(".docm")) {
-    return {
-      verdict: "BLOCKED",
-      problem: "MACRO_CONTENT_BLOCKED",
-      mediaType: "application/vnd.ms-word.document.macroEnabled.12",
-    };
-  }
-  if (name.endsWith(".pdf")) {
-    return { verdict: "CLEAN", problem: null, mediaType: "application/pdf" };
-  }
-  if (name.endsWith(".docx")) {
-    return {
-      verdict: "CLEAN",
-      problem: null,
-      mediaType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    };
-  }
-  return {
-    verdict: "BLOCKED",
-    problem: "UNSUPPORTED_MEDIA_TYPE",
-    mediaType: file.type || "application/octet-stream",
-  };
-}
-
-function labelFrom(filename: string): string {
-  const base = filename.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
-  return base.slice(0, 48) || "Untitled draft";
+  await api(`/api/v1/organizations/${organizationId}/select`, { method: "POST" });
+  clearCsrf();
+  return api<Me>("/api/v1/auth/me");
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>(() => readPersisted()?.role ?? "RECRUITER");
-  const [candidates, setCandidates] = useState<Candidate[]>(
-    () => readPersisted()?.candidates ?? structuredClone(candidateSeed),
-  );
-  const [applications, setApplications] = useState<Application[]>(
-    () => readPersisted()?.applications ?? structuredClone(applicationSeed),
-  );
-  const [intake, setIntake] = useState<IntakeItem[]>(
-    () => readPersisted()?.intake ?? structuredClone(intakeSeed),
-  );
-  const [reviewedRuns, setReviewedRuns] = useState<string[]>(() => readPersisted()?.reviewedRuns ?? []);
-  const [dismissedDupes, setDismissedDupes] = useState<string[]>(
-    () => readPersisted()?.dismissedDupes ?? [],
-  );
+  const [status, setStatus] = useState<Status>("loading");
+  const [me, setMe] = useState<Me | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [documents, setDocuments] = useState<HeldDocument[]>(loadHeld);
   const [notice, setNotice] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const payload: Persisted = {
-      role,
-      candidates,
-      applications,
-      intake,
-      reviewedRuns,
-      dismissedDupes,
-    };
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [role, candidates, applications, intake, reviewedRuns, dismissedDupes]);
+    sessionStorage.setItem(DOC_KEY, JSON.stringify(documents));
+  }, [documents]);
 
   useEffect(() => {
     if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(null), 4600);
+    const timer = window.setTimeout(() => setNotice(null), 5200);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const stepIntake = useCallback(() => {
-    setIntake((items) => {
-      let changed = false;
-      const next = items.map((item) => {
-        const stepped = advance(item);
-        if (stepped.status !== item.status) changed = true;
-        return stepped;
-      });
-      return changed ? next : items;
-    });
+  const remember = useCallback((item: HeldDocument) => {
+    setDocuments((current) => [item, ...current.filter((doc) => doc.id !== item.id)].slice(0, 12));
   }, []);
 
-  const can = (cap: Cap) => ROLE_CAPS[role].includes(cap);
+  const refresh = useCallback(async () => {
+    if (refreshInFlight) return refreshInFlight;
+    const run = async () => {
+      setError(null);
+      try {
+        let profile = await api<Me>("/api/v1/auth/me");
+        if (!profile.active_organization_id) profile = await ensureTenant(profile);
+        setMe(profile);
+        const [jobPage, candidatePage, applicationPage] = await Promise.all([
+          api<Page<Job>>("/api/v1/jobs?limit=100"),
+          api<Page<Candidate>>("/api/v1/candidates?limit=100"),
+          api<Page<Application>>("/api/v1/applications?limit=100"),
+        ]);
+        setJobs(jobPage.items);
+        setCandidates(candidatePage.items);
+        setApplications(applicationPage.items);
+        setStatus("ready");
+      } catch (caught) {
+        if (caught instanceof ApiError && caught.status === 401) {
+          setMe(null);
+          setJobs([]);
+          setCandidates([]);
+          setApplications([]);
+          setStatus("signed-out");
+          return;
+        }
+        setError(explain(caught));
+        setStatus("down");
+      }
+    };
+    refreshInFlight = run().finally(() => {
+      refreshInFlight = null;
+    });
+    return refreshInFlight;
+  }, []);
 
-  const value = useMemo<Workspace>(() => {
-    return {
-      role,
-      setRole,
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const act = useCallback(
+    async (work: () => Promise<string>) => {
+      try {
+        const message = await work();
+        setNotice(message);
+        await refresh();
+      } catch (caught) {
+        setNotice(explain(caught));
+      }
+    },
+    [refresh],
+  );
+
+  const value = useMemo<Workspace>(
+    () => ({
+      status,
+      me,
+      jobs,
       candidates,
       applications,
-      intake,
-      reviewedRuns,
-      dismissedDupes,
+      documents,
       notice,
+      error,
+      can: (capability) => Boolean(me?.capabilities.includes(capability)),
       dismissNotice: () => setNotice(null),
-      can,
-      transition: (id, to, reason) => {
-        if (!can("TRANSITION_STAGE")) {
-          return "This preview role cannot write stages. Interviewers file feedback instead.";
+      signIn: async () => {
+        try {
+          await startLogin("/desk");
+        } catch (caught) {
+          setError(explain(caught));
+          setStatus("down");
         }
-        const current = applications.find((item) => item.id === id);
-        if (!current) return "That application is not on the desk.";
-        if (!ALLOWED[current.stage].includes(to)) {
-          return "That move is not in the allowed stage matrix.";
-        }
-        const trimmed = reason.trim();
-        if (needsReason(current.stage, to) && trimmed.length < 12) {
-          return "Write a full reason. Rejection, withdrawal, and reopening are stored with one.";
-        }
-        const event = {
-          id: `evt-${crypto.randomUUID()}`,
-          from: current.stage,
-          to,
-          actor: `Mira Sen · ${pretty(role)}`,
-          reason: trimmed.length ? trimmed : null,
-          at: new Date().toISOString(),
-        };
-        setApplications((items) =>
-          items.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  stage: to,
-                  version: item.version + 1,
-                  attention: null,
-                  history: [...item.history, event],
-                }
-              : item,
-          ),
-        );
-        setNotice(`Stage written by ${event.actor}. Record version ${current.version + 1}.`);
-        return null;
       },
-      attest: (candidateId, note) => {
-        if (!can("VERIFY_CANDIDATE_CONTACT")) {
-          return "This role does not attest contact. A recruiter, admin, or owner does.";
+      signOut: async () => {
+        try {
+          await api("/api/v1/auth/logout", { method: "POST" });
+        } catch {
+          /* The cookie is cleared locally even if the revoke call fails. */
         }
-        const candidate = candidates.find((item) => item.id === candidateId);
-        if (!candidate) return "That candidate is not on the desk.";
-        const latest = candidate.contacts[candidate.contacts.length - 1];
-        if (!latest) return "There is no contact revision to attest.";
-        if (candidate.verification?.revision === latest.version) {
-          return "The latest revision is already attested.";
-        }
-        const trimmed = note.trim();
-        if (trimmed.length < 8) {
-          return "Add a short note. An attestation without context is not a record.";
-        }
-        setCandidates((items) =>
-          items.map((item) =>
-            item.id === candidateId
-              ? {
-                  ...item,
-                  verification: {
-                    revision: latest.version,
-                    source: "RECRUITER_ATTESTATION",
-                    actor: "Mira Sen",
-                    note: trimmed,
-                    at: new Date().toISOString(),
-                  },
-                }
-              : item,
-          ),
-        );
-        setNotice(
-          `Contact attested for ${candidate.name}. This is not proof they own the mailbox.`,
-        );
-        return null;
+        clearCsrf();
+        setMe(null);
+        setJobs([]);
+        setCandidates([]);
+        setApplications([]);
+        setStatus("signed-out");
       },
-      feedback: (id, body) => {
-        if (!can("SUBMIT_FEEDBACK")) return "This role cannot file feedback.";
-        const trimmed = body.trim();
-        if (trimmed.length < 8) return "Write the note you actually want on the record.";
-        const author = `Mira Sen · ${pretty(role)}`;
-        setApplications((items) =>
-          items.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  feedback: [
-                    ...item.feedback,
-                    { id: `fb-${crypto.randomUUID()}`, author, body: trimmed, at: new Date().toISOString() },
-                  ],
-                }
-              : item,
-          ),
-        );
-        setNotice("Feedback filed. It does not move the stage.");
-        return null;
-      },
-      stepIntake,
-      admit: (jobId, files) => {
-        if (!can("MANAGE_DOCUMENT_INTAKE")) {
-          return "This role does not admit files. Interviewers do not see document bytes.";
-        }
-        const job = jobById(jobId);
-        if (!job || job.status !== "OPEN") {
-          return "Intake only binds to an open vacancy. Paused and draft roles take no files.";
-        }
-        const list = Array.from(files);
-        if (list.length === 0) return "Choose a file to quarantine.";
-        if (intake.length + list.length > BATCH_ITEM_LIMIT) {
-          return `This preview batch stops at ${BATCH_ITEM_LIMIT} files.`;
-        }
-        const created: IntakeItem[] = list.map((file) => {
-          const judged = judge(file);
-          return {
-            id: `item-${crypto.randomUUID()}`,
-            batch: "Live drop · 06 Nov",
-            jobId,
-            filename: file.name,
-            mediaType: judged.mediaType,
-            bytes: file.size,
-            status: "RESERVED",
-            verdict: judged.verdict,
-            problem: judged.problem,
-            who: `${labelFrom(file.name)} · draft`,
-          };
-        });
-        setIntake((items) => [...created, ...items]);
-        setNotice(
-          created.length === 1
-            ? "File reserved in quarantine. A clean scan is the only way out."
-            : `${created.length} files reserved in quarantine.`,
-        );
-        return null;
-      },
-      ackRun: (id) => {
-        setReviewedRuns((items) => (items.includes(id) ? items : [...items, id]));
-        setNotice("Reviewed. The quote underneath this revision stays put.");
-      },
-      dismissDupe: (id) => {
-        setDismissedDupes((items) => (items.includes(id) ? items : [...items, id]));
-        setNotice("Kept separate. Nothing was merged.");
-      },
-      reset: () => {
-        sessionStorage.removeItem(STORAGE_KEY);
-        setRole("RECRUITER");
-        setCandidates(structuredClone(candidateSeed));
-        setApplications(structuredClone(applicationSeed));
-        setIntake(structuredClone(intakeSeed));
-        setReviewedRuns([]);
-        setDismissedDupes([]);
-        setNotice("Desk reset to the Friday fixture.");
-      },
-    };
-  }, [role, candidates, applications, intake, reviewedRuns, dismissedDupes, notice, stepIntake]);
+      refresh,
+      createJob: (input) =>
+        act(async () => {
+          const draft = input.skill.trim()
+            ? [
+                {
+                  criterion_type: "SKILL_PRESENT",
+                  is_required: true,
+                  source_requirement_text: `${input.skill.trim()} is required for this vacancy.`,
+                  relevance_rationale: "Published by the operator as the hiring rule.",
+                  configuration: { criterion_type: "SKILL_PRESENT", skill_name: input.skill.trim() },
+                },
+              ]
+            : undefined;
+          const created = await api<Job>("/api/v1/jobs", {
+            method: "POST",
+            body: JSON.stringify({
+              title: input.title.trim(),
+              description: input.description.trim(),
+              department: input.department.trim() || null,
+              location: input.location.trim() || null,
+              ...(draft ? { draft_requirements: draft } : {}),
+            }),
+          });
+          if (input.publish) {
+            if (!draft) throw new ApiError(400, "Publish needs one skill. Drafts can wait.");
+            await api(`/api/v1/jobs/${created.id}/publish`, {
+              method: "POST",
+              body: JSON.stringify({
+                expected_version: created.version,
+                change_summary: "Initial published rule.",
+              }),
+            });
+            return `${created.title} is open. That rule is now law.`;
+          }
+          return `${created.title} is a draft. It screens nobody until you publish.`;
+        }),
+      createCandidate: (input) =>
+        act(async () => {
+          const created = await api<{
+            candidate: Candidate;
+            duplicate_suggestions: unknown[];
+          }>("/api/v1/candidates", {
+            method: "POST",
+            body: JSON.stringify({
+              display_name: input.display_name.trim(),
+              email: input.email.trim(),
+              source: "MANUAL_ENTRY",
+              is_draft: false,
+            }),
+          });
+          const suggestions = created.duplicate_suggestions;
+          const extra = suggestions?.length
+            ? " A lookalike was suggested. Nobody was merged."
+            : "";
+          return `${created.candidate.display_name ?? "Candidate"} is on the record.${extra}`;
+        }),
+      attest: (candidate, notes) =>
+        act(async () => {
+          if (!candidate.email) throw new ApiError(400, "There is no address to attest.");
+          await api(`/api/v1/candidates/${candidate.id}/contact-verifications`, {
+            method: "POST",
+            body: JSON.stringify({
+              contact_revision_number: candidate.current_contact_revision_number,
+              verified_address: candidate.email,
+              verification_source: "RECRUITER_ATTESTATION",
+              notes: notes.trim(),
+              expected_version: candidate.version,
+            }),
+          });
+          return "Attestation recorded. This is not proof the mailbox is theirs.";
+        }),
+      createApplication: (jobId, candidateId) =>
+        act(async () => {
+          await api("/api/v1/applications", {
+            method: "POST",
+            body: JSON.stringify({
+              job_id: jobId,
+              candidate_id: candidateId,
+              source: "MANUAL_ENTRY",
+            }),
+          });
+          return "Application opened at New. A person still has to move it.";
+        }),
+      moveStage: (application, target, reason) =>
+        act(async () => {
+          await api(`/api/v1/applications/${application.id}/stage-transitions`, {
+            method: "POST",
+            body: JSON.stringify({
+              target_stage: target,
+              reason: reason.trim() || null,
+              expected_version: application.version,
+            }),
+          });
+          return "Stage written by you. The model did not move this person.";
+        }),
+      uploadResume: (jobId, file) =>
+        act(async () => {
+          const batch = await api<{ id: string }>("/api/v1/upload-batches", {
+            method: "POST",
+            body: JSON.stringify({ job_id: jobId }),
+          });
+          const body = new FormData();
+          body.set("file", file);
+          body.set("new_candidate_is_draft", "true");
+          const item = await api<{
+            id: string;
+            status: string;
+            document_id: string | null;
+            declared_filename: string | null;
+            problem_code: string | null;
+            problem_detail: string | null;
+          }>(`/api/v1/upload-batches/${batch.id}/items`, { method: "POST", body });
+          let latest = item;
+          for (let attempt = 0; attempt < 6; attempt += 1) {
+            if (["CLEAN", "BLOCKED", "FAILED", "CANCELED"].includes(latest.status)) break;
+            await new Promise((resolve) => window.setTimeout(resolve, 1500));
+            const detail = await api<{ items: typeof latest[] }>(`/api/v1/upload-batches/${batch.id}`);
+            latest = detail.items.find((row) => row.id === item.id) ?? latest;
+          }
+          if (latest.document_id) {
+            remember({
+              id: latest.document_id,
+              filename: latest.declared_filename ?? file.name,
+              version: 1,
+              status: latest.status,
+              problem_code: latest.problem_code,
+            });
+          }
+          if (latest.problem_detail) return `${file.name}: ${latest.problem_detail}`;
+          return `${file.name} is ${latest.status.toLowerCase().replaceAll("_", " ")}.`;
+        }),
+      loadVersions: (jobId) => api<RequirementVersion[]>(`/api/v1/jobs/${jobId}/requirement-versions`),
+      loadHistory: (applicationId) =>
+        api<StageEvent[]>(`/api/v1/applications/${applicationId}/stage-history`),
+      loadEligibility: (applicationId) =>
+        api<{ eligible: boolean; reasons: string[] }>(
+          `/api/v1/applications/${applicationId}/interview-eligibility`,
+        ),
+      loadSource: (documentId, version) =>
+        api<SourceView>(`/api/v1/documents/${documentId}/versions/${version}/source`),
+    }),
+    [act, applications, candidates, documents, error, jobs, me, notice, refresh, remember, status],
+  );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
 export function useWorkspace(): Workspace {
   const value = useContext(WorkspaceContext);
-  if (!value) {
-    throw new Error("Talvora workspace is missing its provider.");
-  }
+  if (!value) throw new Error("Workspace is missing");
   return value;
 }

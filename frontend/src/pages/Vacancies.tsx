@@ -1,144 +1,187 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PageHead, Pill } from "../components/Bits";
-import { jobs, protectedTraits } from "../data";
 import { pretty, when } from "../format";
+import { useWorkspace, type RequirementVersion } from "../state";
 
 export function Vacancies() {
+  const { jobs, can, createJob, loadVersions } = useWorkspace();
   const [params, setParams] = useSearchParams();
-  const requested = params.get("id");
-  const job = jobs.find((item) => item.id === requested) ?? jobs[0];
-  const [version, setVersion] = useState<number | "draft" | "latest">("latest");
+  const selected = jobs.find((job) => job.id === params.get("id")) ?? jobs[0] ?? null;
+  const [versions, setVersions] = useState<RequirementVersion[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [department, setDepartment] = useState("");
+  const [location, setLocation] = useState("");
+  const [skill, setSkill] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setVersion("latest");
-  }, [job.id]);
+    if (!selected) {
+      setVersions([]);
+      return;
+    }
+    let cancelled = false;
+    void loadVersions(selected.id)
+      .then((rows) => {
+        if (!cancelled) setVersions(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setVersions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadVersions, selected]);
 
-  const published = job.versions.at(-1);
-  const selected =
-    version === "draft"
-      ? undefined
-      : version === "latest"
-        ? published
-        : job.versions.find((item) => item.number === version);
-  const showingDraft = version === "draft" || !selected;
-  const criteria = showingDraft ? job.draft : selected.criteria;
+  async function submit(publish: boolean) {
+    setBusy(true);
+    try {
+      await createJob({ title, description, department, location, skill, publish });
+      setTitle("");
+      setDescription("");
+      setSkill("");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div>
+    <>
       <PageHead
-        kicker="Vacancies · requirement versions"
-        title="The rule is a version, not a vibe."
-        lede="A published requirement version is the law for that vacancy. Draft text screens nobody. Manual rules stay with a person, and protected traits are refused before they can become criteria."
+        kicker="Vacancies"
+        title="A rule is a version."
+        lede="Drafts screen nobody. Publishing snapshots the criteria and opens the vacancy. Later edits publish again. They do not rewrite the old version."
       />
       <div className="split">
-        <div className="menu" role="list">
-          {jobs.map((item) => (
+        <div className="menu">
+          {jobs.map((job) => (
             <button
-              key={item.id}
+              key={job.id}
+              aria-pressed={selected?.id === job.id}
               type="button"
-              aria-pressed={item.id === job.id}
-              onClick={() => setParams({ id: item.id })}
+              onClick={() => setParams({ id: job.id })}
             >
-              <Pill tone={item.status.toLowerCase()}>{pretty(item.status)}</Pill>
-              <strong>{item.title}</strong>
-              <em>
-                {item.department}
-                {item.versions.length ? ` · v${item.versions.at(-1)?.number} published` : " · unpublished"}
-              </em>
+              <strong>{job.title}</strong>
+              <span>
+                {pretty(job.status)}
+                {job.current_published_version_number
+                  ? ` · v${job.current_published_version_number}`
+                  : " · unpublished"}
+              </span>
             </button>
           ))}
+          {jobs.length === 0 ? <p>No vacancies yet.</p> : null}
         </div>
-        <article className="statute">
-          <header className="statute-head">
-            <div>
-              <Pill tone={job.status.toLowerCase()}>{pretty(job.status)}</Pill>
-              <h2>{job.title}</h2>
-              <p className="lede">{job.summary}</p>
-            </div>
-            <p className="where">
-              {job.location}
-              <span>{pretty(job.employment)}</span>
-              <span>{job.department}</span>
-            </p>
-          </header>
-          <ul className="assignments">
-            {job.assignments.map((item) => (
-              <li key={item.role}>
-                <span>{item.role}</span>
-                {item.name}
-              </li>
-            ))}
-          </ul>
-          <div className="version-row" role="tablist" aria-label="Requirement versions">
-            {job.versions.map((item) => (
-              <button
-                key={item.number}
-                type="button"
-                role="tab"
-                aria-selected={selected?.number === item.number && version !== "draft"}
-                onClick={() => setVersion(item.number)}
-              >
-                Version {item.number}
-                {item.number === published?.number ? " · law" : ""}
-              </button>
-            ))}
-            {job.draft.length ? (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={showingDraft}
-                onClick={() => setVersion("draft")}
-              >
-                Draft · not law
-              </button>
-            ) : null}
-          </div>
-          {showingDraft ? (
-            <p className="banner">
-              Unpublished. These lines are notes toward a future version. They cannot accept a batch
-              and they cannot screen a person.
-            </p>
-          ) : (
-            <p className="banner law-banner">
-              Published {when(selected.publishedAt)}. {selected.note}
-            </p>
-          )}
-          <ol className={showingDraft ? "articles not-law" : "articles"}>
-            {criteria.map((item, index) => (
-              <li key={item.id} className="article">
-                <div className="article-index">
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  {item.human ? <span className="seal">Human check</span> : null}
+        <article className="inspector">
+          {selected ? (
+            <>
+              <p className="kicker">{pretty(selected.status)}</p>
+              <h2>{selected.title}</h2>
+              <p>{selected.description}</p>
+              <dl className="facts">
+                <div>
+                  <dt>Department</dt>
+                  <dd>{selected.department || "—"}</dd>
                 </div>
                 <div>
-                  <div className="article-meta">
-                    <Pill tone={item.human ? "human" : "neutral"}>{pretty(item.type)}</Pill>
-                    <Pill tone={item.required ? "open" : "draft"}>{item.required ? "Required" : "Preferred"}</Pill>
-                  </div>
-                  <p className="source">{item.source}</p>
-                  <p className="muted">{item.rationale}</p>
-                  <p className="hash">{item.detail}</p>
+                  <dt>Location</dt>
+                  <dd>{selected.location || "—"}</dd>
                 </div>
-              </li>
-            ))}
-          </ol>
-          {job.status !== "OPEN" ? (
-            <p className="muted">
-              Intake refuses this vacancy while it is {pretty(job.status).toLowerCase()}. Files bind
-              only to an open role.
-            </p>
-          ) : null}
-          <footer className="traits">
-            <p>Refused as criteria</p>
-            <ul>
-              {protectedTraits.map((trait) => (
-                <li key={trait}>{trait}</li>
-              ))}
-            </ul>
-          </footer>
+                <div>
+                  <dt>Employment</dt>
+                  <dd>{pretty(selected.employment_type)}</dd>
+                </div>
+                <div>
+                  <dt>Record version</dt>
+                  <dd>{selected.version}</dd>
+                </div>
+              </dl>
+              <h3>Published versions</h3>
+              {versions.length === 0 ? <p>No published version. This vacancy is not law.</p> : null}
+              <ol className="timeline">
+                {versions.map((version) => (
+                  <li key={version.id}>
+                    <span className="dot" />
+                    <div>
+                      <strong>
+                        Version {version.version_number}
+                        <Pill>{when(version.published_at)}</Pill>
+                      </strong>
+                      <p>{version.change_summary || version.title}</p>
+                      <ul>
+                        {version.criteria.map((criterion) => (
+                          <li key={criterion.id}>
+                            {criterion.configuration.skill_name || pretty(criterion.criterion_type)} —{" "}
+                            {criterion.source_requirement_text}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </>
+          ) : (
+            <p>Create the first vacancy. It stays a draft until you publish a skill.</p>
+          )}
+          {can("CREATE_JOB") ? (
+            <form
+              className="field"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submit(false);
+              }}
+            >
+              <h3>New vacancy</h3>
+              <input
+                required
+                placeholder="Title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+              <textarea
+                required
+                placeholder="What this role is for"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+              <input
+                placeholder="Department"
+                value={department}
+                onChange={(event) => setDepartment(event.target.value)}
+              />
+              <input
+                placeholder="Location"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+              />
+              <input
+                placeholder="Skill the published rule will require"
+                value={skill}
+                onChange={(event) => setSkill(event.target.value)}
+              />
+              <div className="row">
+                <button className="btn" type="submit" disabled={busy}>
+                  Save draft
+                </button>
+                {can("PUBLISH_JOB_REQUIREMENTS") ? (
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void submit(true)}
+                  >
+                    Publish and open
+                  </button>
+                ) : null}
+              </div>
+            </form>
+          ) : (
+            <p>This session cannot create vacancies.</p>
+          )}
         </article>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,178 +1,70 @@
 import { Link } from "react-router-dom";
-import { PageHead, Pill } from "../components/Bits";
-import { duplicatePairs, jobs, runs } from "../data";
-import { ACTIVE_STAGES, greeting, pretty, type Stage } from "../format";
+import { PageHead } from "../components/Bits";
+import { greeting, pretty } from "../format";
 import { useWorkspace } from "../state";
 
 export function Desk() {
-  const { applications, candidates, intake, reviewedRuns, dismissedDupes, role } = useWorkspace();
-  const moving = applications.filter((item) => ACTIVE_STAGES.includes(item.stage));
+  const { me, jobs, candidates, applications } = useWorkspace();
   const openJobs = jobs.filter((job) => job.status === "OPEN");
-  const inAirlock = intake.filter(
-    (item) => item.status === "RESERVED" || item.status === "QUARANTINED" || item.status === "SCANNING",
-  );
-  const reviewRun = runs.find((run) => run.status === "NEEDS_REVIEW" && !reviewedRuns.includes(run.id));
-  const quote = runs[0]?.fragments[0];
-  const segment = runs[0]?.segments.find((item) => item.id === quote?.segmentId);
-
-  const waiting: { href: string; kicker: string; text: string }[] = [];
-  for (const app of applications) {
-    if (!app.attention || !ACTIVE_STAGES.includes(app.stage)) continue;
-    const person = candidates.find((item) => item.id === app.candidateId);
-    waiting.push({
-      href: `/pipeline?app=${app.id}`,
-      kicker: person?.name ?? app.serial,
-      text: app.attention,
-    });
-  }
-  for (const person of candidates) {
-    const latest = person.contacts[person.contacts.length - 1];
-    if (!latest) continue;
-    const verified = person.verification?.revision === latest.version;
-    const active = applications.some(
-      (item) => item.candidateId === person.id && ACTIVE_STAGES.includes(item.stage),
-    );
-    if (!verified && active && latest.source === "RESUME_EXTRACTED_UNVERIFIED") {
-      waiting.push({
-        href: `/people?id=${person.id}`,
-        kicker: person.name,
-        text: "Email was read off a resume and has not been attested. Scheduling should not trust it yet.",
-      });
-    }
-  }
-  if (inAirlock.length) {
-    waiting.push({
-      href: "/intake",
-      kicker: "Quarantine",
-      text: `${inAirlock.length} file${inAirlock.length === 1 ? "" : "s"} still between the door and a clean bucket.`,
-    });
-  }
-  if (reviewRun) {
-    const person = candidates.find((item) => item.id === reviewRun.candidateId);
-    waiting.push({
-      href: `/evidence?run=${reviewRun.id}`,
-      kicker: person?.name ?? "Extraction",
-      text: reviewRun.warning ?? "This read needs a person.",
-    });
-  }
-  for (const pair of duplicatePairs) {
-    if (dismissedDupes.includes(pair.id)) continue;
-    waiting.push({
-      href: `/people?id=${pair.a}`,
-      kicker: "Lookalikes",
-      text: pair.reason,
-    });
-  }
-
-  const ledger = applications
-    .flatMap((app) =>
-      app.history.map((event) => ({
-        ...event,
-        serial: app.serial,
-        name: candidates.find((item) => item.id === app.candidateId)?.name ?? app.serial,
-      })),
-    )
-    .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 6);
+  const drafts = jobs.filter((job) => job.status === "DRAFT");
+  const fresh = applications.filter((application) => application.stage === "NEW");
+  const unverified = candidates.filter((candidate) => !candidate.is_draft && !candidate.is_contact_verified);
 
   return (
-    <div className="desk">
+    <>
       <PageHead
-        kicker={`${greeting()} · ${pretty(role)}`}
-        title="The desk is holding still."
-        lede={`${moving.length} applications are in motion across ${openJobs.length} open vacancies. Nothing in that count will change unless someone with the capability writes it.`}
+        kicker={me?.role ? pretty(me.role) : "Session"}
+        title={`${greeting()}. The record is live.`}
+        lede="Counts below come from the API for this organization. A draft vacancy screens nobody. A stage moves only when you write it."
       />
-      <section className="metrics" aria-label="Desk signals">
+      <section className="metrics">
         <Link to="/vacancies">
           <span>Open vacancies</span>
           <b>{openJobs.length}</b>
-          <em>Published rules only</em>
+          <em>{drafts.length} still draft</em>
         </Link>
         <Link to="/pipeline">
-          <span>In motion</span>
-          <b>{moving.length}</b>
-          <em>Hired stays hired</em>
+          <span>Applications</span>
+          <b>{applications.length}</b>
+          <em>{fresh.length} still new</em>
+        </Link>
+        <Link to="/people">
+          <span>People</span>
+          <b>{candidates.length}</b>
+          <em>{unverified.length} contact unverified</em>
         </Link>
         <Link to="/intake">
-          <span>In the airlock</span>
-          <b>{inAirlock.length}</b>
-          <em>Not extractable yet</em>
-        </Link>
-        <Link to={reviewRun ? `/evidence?run=${reviewRun.id}` : "/evidence"}>
-          <span>Reads to judge</span>
-          <b>{reviewRun ? 1 : 0}</b>
-          <em>Low-confidence OCR</em>
+          <span>Intake</span>
+          <b>{openJobs.length}</b>
+          <em>open jobs can take a file</em>
         </Link>
       </section>
-
-      <div className="desk-grid">
-        <section>
-          <h2>Waiting on a person</h2>
-          <ul className="wait">
-            {waiting.map((item) => (
-              <li key={item.href + item.kicker}>
-                <Link to={item.href}>
-                  <span>{item.kicker}</span>
-                  <p>{item.text}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-        <section className="desk-side">
-          {quote && segment ? (
-            <blockquote className="pull">
-              <p>“{quote.quote}”</p>
-              <footer>
-                <Link to="/evidence?run=run-adeel">Adeel Rahman · {segment.locator}</Link>
-                <span className="hash">{quote.hash}</span>
-              </footer>
-            </blockquote>
-          ) : null}
-          <h2>Current</h2>
-          <div className="current">
-            {ACTIVE_STAGES.map((stage) => (
-              <Link key={stage} to="/pipeline">
-                <span>{pretty(stage)}</span>
-                <b>{count(applications, stage)}</b>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </div>
-
       <section className="ledger">
-        <h2>Latest stage writes</h2>
-        <ol>
-          {ledger.map((event) => (
-            <li key={event.id}>
-              <div>
-                <strong>{event.name}</strong>
-                <span className="hash">{event.serial}</span>
-              </div>
-              <p>
-                {event.from ? (
-                  <>
-                    <Pill tone={event.from.toLowerCase()}>{pretty(event.from)}</Pill>
-                    <span aria-hidden="true"> → </span>
-                  </>
-                ) : (
-                  <span>Opened at </span>
-                )}
-                <Pill tone={event.to.toLowerCase()}>{pretty(event.to)}</Pill>
-              </p>
-              <p className="muted">
-                {event.actor}
-                {event.reason ? ` · ${event.reason}` : ""}
-              </p>
+        <h2>Waiting on a person</h2>
+        <ul className="wait">
+          {fresh.slice(0, 5).map((application) => (
+            <li key={application.id}>
+              <Link to={`/pipeline?app=${application.id}`}>
+                <span>New application</span>
+                <p>Stage is still New. Open the pipeline and write the next one yourself.</p>
+              </Link>
             </li>
           ))}
-        </ol>
+          {drafts.slice(0, 3).map((job) => (
+            <li key={job.id}>
+              <Link to={`/vacancies?id=${job.id}`}>
+                <span>Draft vacancy</span>
+                <p>{job.title} is not law until a requirement version is published.</p>
+              </Link>
+            </li>
+          ))}
+          {fresh.length === 0 && drafts.length === 0 ? (
+            <li>
+              <p>Nothing is waiting. Open a vacancy, add a person, or leave the pipeline alone.</p>
+            </li>
+          ) : null}
+        </ul>
       </section>
-    </div>
+    </>
   );
-}
-
-function count(applications: { stage: Stage }[], stage: Stage): number {
-  return applications.filter((item) => item.stage === stage).length;
 }

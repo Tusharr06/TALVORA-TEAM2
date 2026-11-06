@@ -1,292 +1,183 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHead, Pill } from "../components/Bits";
-import { jobById } from "../data";
-import {
-  ACTIVE_STAGES,
-  ALLOWED,
-  TERMINAL_STAGES,
-  destinationLabel,
-  interviewEligible,
-  needsReason,
-  pretty,
-  when,
-  type Stage,
-} from "../format";
-import { useWorkspace } from "../state";
+import { ACTIVE_STAGES, ALLOWED, destinationLabel, needsReason, pretty, when, type Stage } from "../format";
+import { useWorkspace, type StageEvent } from "../state";
 
 export function Pipeline() {
-  const { applications, candidates, can, transition, feedback } = useWorkspace();
+  const {
+    jobs,
+    candidates,
+    applications,
+    can,
+    createApplication,
+    moveStage,
+    loadHistory,
+    loadEligibility,
+  } = useWorkspace();
   const [params, setParams] = useSearchParams();
-  const jobFilter = params.get("job") ?? "all";
-  const selectedId = params.get("app");
-  const [target, setTarget] = useState<Stage | null>(null);
+  const selected = applications.find((item) => item.id === params.get("app")) ?? null;
+  const [history, setHistory] = useState<StageEvent[]>([]);
+  const [eligibility, setEligibility] = useState<string>("");
   const [reason, setReason] = useState("");
-  const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [jobId, setJobId] = useState("");
+  const [candidateId, setCandidateId] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const visible = applications.filter((item) => jobFilter === "all" || item.jobId === jobFilter);
-  const selected = applications.find((item) => item.id === selectedId) ?? null;
-  const person = candidates.find((item) => item.id === selected?.candidateId);
-  const job = selected ? jobById(selected.jobId) : undefined;
-
-  function select(id: string) {
-    const next = new URLSearchParams(params);
-    next.set("app", id);
-    setParams(next);
-    setTarget(null);
-    setReason("");
-    setError(null);
-  }
-
-  function writeStage() {
-    if (!selected || !target) {
-      setError("Choose the stage you are actually writing.");
-      return;
-    }
-    const message = transition(selected.id, target, reason);
-    setError(message);
-    if (!message) {
-      setTarget(null);
-      setReason("");
-    }
-  }
-
-  function fileNote() {
+  useEffect(() => {
     if (!selected) return;
-    const message = feedback(selected.id, note);
-    setError(message);
-    if (!message) setNote("");
-  }
+    let cancelled = false;
+    void loadHistory(selected.id)
+      .then((rows) => {
+        if (!cancelled) setHistory(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
+      });
+    void loadEligibility(selected.id)
+      .then((result) => {
+        if (cancelled) return;
+        setEligibility(
+          result.eligible ? "Eligible to interview." : result.reasons.join(" ") || "Not eligible.",
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setEligibility("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadEligibility, loadHistory, selected]);
+
+  const candidateName = (id: string) =>
+    candidates.find((candidate) => candidate.id === id)?.display_name || "Unnamed";
+  const jobTitle = (id: string) => jobs.find((job) => job.id === id)?.title || "Vacancy";
 
   return (
-    <div>
+    <>
       <PageHead
-        kicker="Pipeline · human commands"
-        title="Stages move when a person writes them."
-        lede="Rejection, withdrawal, and reopening require a reason. Hired is final. Interviewers can leave a note, and the note does not change the stage."
+        kicker="Pipeline"
+        title="A person writes the stage."
+        lede="The buttons follow the allowed matrix. The API still refuses a move your role cannot make, and it refuses a stale version."
       />
-      <div className="filters" role="toolbar" aria-label="Filter by vacancy">
-        <FilterButton
-          pressed={jobFilter === "all"}
-          onClick={() => setParams(selectedId ? { app: selectedId } : {})}
-          label="All motion"
-        />
-        {["job-dse", "job-extract", "job-ops", "job-design"].map((id) => {
-          const item = jobById(id);
-          if (!item) return null;
-          return (
-            <FilterButton
-              key={id}
-              pressed={jobFilter === id}
-              onClick={() => {
-                const next: Record<string, string> = { job: id };
-                if (selectedId) next.app = selectedId;
-                setParams(next);
-              }}
-              label={item.title}
-            />
-          );
-        })}
+      <div className="board-scroll">
+        <div className="board">
+          {ACTIVE_STAGES.map((stage) => (
+            <section key={stage}>
+              <h2>{pretty(stage)}</h2>
+              {applications
+                .filter((application) => application.stage === stage)
+                .map((application) => (
+                  <button
+                    key={application.id}
+                    className={`ticket${selected?.id === application.id ? " is-on" : ""}`}
+                    type="button"
+                    onClick={() => setParams({ app: application.id })}
+                  >
+                    <strong>{candidateName(application.candidate_id)}</strong>
+                    <span>{jobTitle(application.job_id)}</span>
+                  </button>
+                ))}
+            </section>
+          ))}
+        </div>
       </div>
-      <div className="flow">
-        <div>
-          <div className="board-scroll">
-            <div className="board">
-              {ACTIVE_STAGES.map((stage) => {
-                const cards = visible.filter((item) => item.stage === stage);
+      {selected ? (
+        <article className="inspector">
+          <p className="kicker">{pretty(selected.stage)}</p>
+          <h2>{candidateName(selected.candidate_id)}</h2>
+          <p>
+            {jobTitle(selected.job_id)} · record v{selected.version}
+          </p>
+          {eligibility ? <p>{eligibility}</p> : null}
+          <ol className="timeline">
+            {history.map((event) => (
+              <li key={event.id}>
+                <span className="dot" />
+                <div>
+                  <strong>
+                    {event.from_stage ? pretty(event.from_stage) : "Opened"} → {pretty(event.to_stage)}
+                    <Pill>{when(event.created_at)}</Pill>
+                  </strong>
+                  <p>
+                    {pretty(event.actor_role)}
+                    {event.reason ? ` · ${event.reason}` : ""}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {can("TRANSITION_STAGE") ? (
+            <div className="choices">
+              {(ALLOWED[selected.stage as Stage] ?? []).map((target) => {
+                const ask = needsReason(selected.stage as Stage, target);
                 return (
-                  <section key={stage} className="column" aria-label={pretty(stage)}>
-                    <header>
-                      <span>{pretty(stage)}</span>
-                      <b>{cards.length}</b>
-                    </header>
-                    {cards.length === 0 ? <p className="empty">No one here.</p> : null}
-                    {cards.map((item) => {
-                      const name = candidates.find((personItem) => personItem.id === item.candidateId)?.name;
-                      return (
-                        <article key={item.id} className={item.id === selectedId ? "ticket is-on" : "ticket"}>
-                          <button type="button" onClick={() => select(item.id)}>
-                            <span className="serial">{item.serial}</span>
-                            <strong>{name}</strong>
-                            <span>{pretty(item.source)}</span>
-                            {item.attention ? <Pill tone="human">Human check</Pill> : null}
-                          </button>
-                        </article>
-                      );
-                    })}
-                  </section>
+                  <button
+                    key={target}
+                    className="btn"
+                    type="button"
+                    disabled={busy || (ask && reason.trim().length === 0)}
+                    onClick={() => {
+                      setBusy(true);
+                      void moveStage(selected, target, reason).finally(() => {
+                        setBusy(false);
+                        setReason("");
+                      });
+                    }}
+                  >
+                    {destinationLabel(selected.stage as Stage, target)}
+                  </button>
                 );
               })}
             </div>
-          </div>
-          <section className="closed-book">
-            <h2>Closed book</h2>
-            <div className="terminal-grid">
-              {TERMINAL_STAGES.map((stage) =>
-                visible
-                  .filter((item) => item.stage === stage)
-                  .map((item) => {
-                    const name = candidates.find((personItem) => personItem.id === item.candidateId)?.name;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={item.id === selectedId ? "ticket is-on" : "ticket"}
-                        onClick={() => select(item.id)}
-                      >
-                        <span className="serial">{item.serial}</span>
-                        <strong>{name}</strong>
-                        <Pill tone={stage.toLowerCase()}>{pretty(stage)}</Pill>
-                      </button>
-                    );
-                  }),
-              )}
-            </div>
-          </section>
-        </div>
-        <aside className="inspector" aria-live="polite">
-          {!selected || !person || !job ? (
-            <p className="lede">Select a ticket. The stage history opens here, and so does the next legal move.</p>
           ) : (
-            <>
-              <p className="kicker">{selected.serial}</p>
-              <h2>{person.name}</h2>
-              <p>
-                <Link to={`/people?id=${person.id}`}>Open the person</Link>
-                {" · "}
-                <Link to={`/vacancies?id=${job.id}`}>{job.title}</Link>
-              </p>
-              <dl className="facts">
-                <div>
-                  <dt>Stage</dt>
-                  <dd>
-                    <Pill tone={selected.stage.toLowerCase()}>{pretty(selected.stage)}</Pill>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Record version</dt>
-                  <dd>{selected.version}</dd>
-                </div>
-                <div>
-                  <dt>Source</dt>
-                  <dd>{pretty(selected.source)}</dd>
-                </div>
-                <div>
-                  <dt>Scheduling</dt>
-                  <dd>
-                    {interviewEligible(selected.stage)
-                      ? "Eligible for a later scheduling pass."
-                      : "Not eligible for scheduling at this stage."}
-                  </dd>
-                </div>
-              </dl>
-              {selected.attention ? <p className="banner">{selected.attention}</p> : null}
-              <h3>History</h3>
-              <ol className="timeline">
-                {selected.history.map((event) => (
-                  <li key={event.id}>
-                    <span className="dot" />
-                    <div>
-                      <strong>
-                        {event.from ? `${pretty(event.from)} → ${pretty(event.to)}` : `Opened · ${pretty(event.to)}`}
-                      </strong>
-                      <p className="muted">
-                        {event.actor} · {when(event.at)}
-                      </p>
-                      {event.reason ? <p>{event.reason}</p> : null}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              {can("TRANSITION_STAGE") ? (
-                <div className="write-stage">
-                  <h3>Write the next stage</h3>
-                  {selected.stage === "HIRED" ? (
-                    <p className="muted">Hired is final in this phase. There is no reopen.</p>
-                  ) : (
-                    <>
-                      <div className="choices">
-                        {ALLOWED[selected.stage].map((stage) => (
-                            <button
-                              key={stage}
-                              type="button"
-                              className="btn btn-ghost"
-                              aria-pressed={target === stage}
-                              onClick={() => {
-                                setTarget(stage);
-                                setError(null);
-                              }}
-                            >
-                              {destinationLabel(selected.stage, stage)}
-                            </button>
-                          ))}
-                      </div>
-                      {target && needsReason(selected.stage, target) ? (
-                        <label className="field">
-                          Reason
-                          <textarea
-                            value={reason}
-                            onChange={(event) => setReason(event.target.value)}
-                            placeholder="Why this person, why this stage, in a sentence a later reader can trust."
-                          />
-                        </label>
-                      ) : null}
-                      <button className="btn btn-primary" type="button" onClick={writeStage} disabled={!target}>
-                        Write this stage
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <p className="banner">Interviewers do not move stages. Leave the note below.</p>
-              )}
-              <h3>Feedback</h3>
-              <ul className="notes">
-                {selected.feedback.length === 0 ? <li className="muted">No notes yet.</li> : null}
-                {selected.feedback.map((item) => (
-                  <li key={item.id}>
-                    <p>{item.body}</p>
-                    <p className="muted">
-                      {item.author} · {when(item.at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              {can("SUBMIT_FEEDBACK") ? (
-                <label className="field">
-                  Add a note
-                  <textarea
-                    value={note}
-                    onChange={(event) => setNote(event.target.value)}
-                    placeholder="What should the next person know? This stays off the stage."
-                  />
-                  <button className="btn btn-ghost" type="button" onClick={fileNote}>
-                    File feedback
-                  </button>
-                </label>
-              ) : null}
-              {error ? <p className="form-error">{error}</p> : null}
-            </>
+            <p>This session cannot move stages.</p>
           )}
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-function FilterButton({
-  pressed,
-  onClick,
-  label,
-}: {
-  pressed: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button type="button" className="btn btn-ghost" aria-pressed={pressed} onClick={onClick}>
-      {label}
-    </button>
+          {selected.stage !== "HIRED" && can("TRANSITION_STAGE") ? (
+            <label className="field">
+              Reason, when the move demands one
+              <textarea value={reason} onChange={(event) => setReason(event.target.value)} />
+            </label>
+          ) : null}
+        </article>
+      ) : null}
+      {can("CREATE_APPLICATION") ? (
+        <form
+          className="field"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setBusy(true);
+            void createApplication(jobId, candidateId).finally(() => setBusy(false));
+          }}
+        >
+          <h3>Open an application</h3>
+          <select required value={jobId} onChange={(event) => setJobId(event.target.value)}>
+            <option value="">Vacancy</option>
+            {jobs
+              .filter((job) => job.status === "OPEN")
+              .map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.title}
+                </option>
+              ))}
+          </select>
+          <select
+            required
+            value={candidateId}
+            onChange={(event) => setCandidateId(event.target.value)}
+          >
+            <option value="">Person</option>
+            {candidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.display_name || candidate.email || "Unnamed"}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            Open at New
+          </button>
+        </form>
+      ) : null}
+    </>
   );
 }

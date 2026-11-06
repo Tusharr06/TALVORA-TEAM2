@@ -1,5 +1,6 @@
 """Identity and Authentication REST Endpoints."""
 
+import urllib.parse
 from datetime import UTC, datetime, timedelta
 from typing import cast
 
@@ -87,7 +88,40 @@ def login(
         nonce=nonce,
         code_verifier=code_verifier,
     )
+    # The mock provider stores its one-time grant in memory and returns an issuer
+    # that is not a reachable identity server. In local development, send the browser
+    # back to this API with the same state and PKCE query so the callback can finish.
+    if settings.allow_dev_identity_adapter and isinstance(oidc, MockOidcClient):
+        parsed = urllib.parse.urlparse(auth_url)
+        auth_url = f"{base_url}/api/v1/auth/dev-authorize?{parsed.query}"
     return LoginResponse(authorization_url=auth_url)
+
+
+@router.get("/dev-authorize", include_in_schema=False)
+def dev_authorize(
+    request: Request,
+    state: str = Query(..., description="OIDC state token from the local login transaction."),
+    settings: Settings = Depends(get_settings),
+) -> RedirectResponse:
+    """Complete the local mock login by redirecting to the real callback.
+
+    Disabled whenever the development identity adapter is off, including staging
+    and production, where that adapter cannot be configured.
+    """
+    if not settings.allow_dev_identity_adapter:
+        raise ProblemException(
+            status_code=404,
+            title="Not Found",
+            code="NOT_FOUND",
+            detail="Development authorization is disabled.",
+        )
+    code = f"mock_code_{state[:16]}"
+    base_url = str(request.base_url).rstrip("/")
+    target = (
+        f"{base_url}/api/v1/auth/callback"
+        f"?code={urllib.parse.quote(code)}&state={urllib.parse.quote(state)}"
+    )
+    return RedirectResponse(url=target, status_code=302)
 
 
 @router.get("/callback")
