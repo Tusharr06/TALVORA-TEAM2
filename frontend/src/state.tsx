@@ -8,6 +8,12 @@ import {
   type ReactNode,
 } from "react";
 import { pretty } from "./format";
+import {
+  INITIAL_AUDIT_LOGS,
+  INITIAL_INTERVIEW_PACKS,
+  INITIAL_INTERVIEWERS,
+  generateDynamicInterviewPack,
+} from "./mockData";
 
 export type Me = {
   user_id: string;
@@ -26,7 +32,7 @@ export type Job = {
   department: string | null;
   location: string | null;
   employment_type: string;
-  status: string;
+  status: string; // "OPEN" | "DRAFT" | "CLOSED"
   current_published_version_number: number | null;
   version: number;
   hiring_manager: string;
@@ -127,13 +133,19 @@ export type SourceView = {
 
 export type InterviewScheduleItem = {
   id: string;
+  candidate_id?: string;
+  application_id?: string;
+  job_id?: string;
   time: string;
+  date?: string;
   candidate_name: string;
   candidate_role: string;
   interviewer: string;
+  interviewer_id?: string;
   round_title: string;
-  status: "In Progress" | "Scheduled" | "Completed";
-  tone: "interviewing" | "human" | "clean";
+  status: "In Progress" | "Scheduled" | "Completed" | "Cancelled";
+  tone: "interviewing" | "human" | "clean" | "closed";
+  notes?: string;
 };
 
 export type OnboardingTask = {
@@ -166,6 +178,53 @@ export type HiredEmployee = {
   offer_accepted_at: string;
 };
 
+export type Interviewer = {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  email: string;
+  availability: "Available" | "Busy" | "Preferred";
+};
+
+export type InterviewPack = {
+  id: string;
+  application_id: string;
+  candidate_id: string;
+  job_id: string;
+  generated_at: string;
+  candidate_summary: string;
+  key_strengths: string[];
+  areas_to_probe: string[];
+  technical_questions: {
+    question: string;
+    expected_answer: string;
+    criteria_tested: string;
+  }[];
+  behavioral_questions: {
+    question: string;
+    evaluation_focus: string;
+  }[];
+  evaluation_rubric: {
+    competency: string;
+    level_1_poor: string;
+    level_3_acceptable: string;
+    level_5_exceptional: string;
+  }[];
+  is_simulated_ai: true;
+};
+
+export type AuditLog = {
+  id: string;
+  timestamp: string;
+  actor: string;
+  action: string;
+  target_type: "REQUISITION" | "CANDIDATE" | "APPLICATION" | "INTERVIEW" | "DOCUMENT" | "ONBOARDING";
+  target_id: string;
+  target_name: string;
+  details: string;
+};
+
 type Status = "loading" | "signed-out" | "ready" | "down";
 
 const HARDCODED_ME: Me = {
@@ -180,9 +239,11 @@ const HARDCODED_ME: Me = {
     "VERIFY_CANDIDATE_CONTACT",
     "CREATE_APPLICATION",
     "MOVE_APPLICATION_STAGE",
+    "TRANSITION_STAGE",
     "MANAGE_DOCUMENT_INTAKE",
     "READ_DOCUMENTS",
     "READ_SCREENING_EVIDENCE",
+    "SUBMIT_FEEDBACK",
   ],
   organizations: [
     {
@@ -198,6 +259,7 @@ const INITIAL_SCHEDULE: InterviewScheduleItem[] = [
   {
     id: "sch-1",
     time: "10:00 AM",
+    date: "Today",
     candidate_name: "Elena Rostova",
     candidate_role: "Staff Infrastructure Engineer",
     interviewer: "Dr. Jennifer Vance (VP Platform Engineering)",
@@ -208,6 +270,7 @@ const INITIAL_SCHEDULE: InterviewScheduleItem[] = [
   {
     id: "sch-2",
     time: "01:30 PM",
+    date: "Today",
     candidate_name: "Marcus Vance",
     candidate_role: "Principal Distributed Systems Engineer",
     interviewer: "Alex Miller (Staff Infrastructure Architect)",
@@ -218,9 +281,10 @@ const INITIAL_SCHEDULE: InterviewScheduleItem[] = [
   {
     id: "sch-3",
     time: "03:00 PM",
+    date: "Today",
     candidate_name: "Priya Sharma, Ph.D.",
     candidate_role: "Senior AI Research Scientist",
-    interviewer: "Core AI Research Technical Panel (Dr. Chen & Dr. Marcus)",
+    interviewer: "Dr. Tariq Chen (Director of AI Research)",
     round_title: "Round 2: Deterministic LLM Grounding & Retrieval Benchmarks",
     status: "Scheduled",
     tone: "human",
@@ -228,6 +292,7 @@ const INITIAL_SCHEDULE: InterviewScheduleItem[] = [
   {
     id: "sch-4",
     time: "04:30 PM",
+    date: "Today",
     candidate_name: "Chloe Bennet",
     candidate_role: "Lead Cloud Security Architect",
     interviewer: "Marcus Cole (Chief Information Security Officer)",
@@ -256,7 +321,8 @@ const INITIAL_HIRED_EMPLOYEES: HiredEmployee[] = [
     location: "Boston, MA (Hybrid / New York Hub)",
     onboarding_status: "Ready for Day 1",
     offer_accepted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-    hiring_notes: "Unanimous Strong Hire verdict across frontend architecture, accessibility, and state synchronization debriefs.",
+    hiring_notes:
+      "Unanimous Strong Hire verdict across frontend architecture, accessibility, and state synchronization debriefs.",
     checklist: [
       {
         id: "chk-liam-1",
@@ -341,7 +407,8 @@ const INITIAL_HIRED_EMPLOYEES: HiredEmployee[] = [
     location: "London, UK (Remote / Sovereign EU Cloud)",
     onboarding_status: "Provisioning",
     offer_accepted_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    hiring_notes: "Exemplary track record managing multi-region Kubernetes clusters with zero unscheduled downtime at Uber Core.",
+    hiring_notes:
+      "Exemplary track record managing multi-region Kubernetes clusters with zero unscheduled downtime at Uber Core.",
     checklist: [
       {
         id: "chk-am-1",
@@ -558,14 +625,6 @@ const INITIAL_REQUIREMENT_VERSIONS: Record<string, RequirementVersion[]> = {
           relevance_rationale: "Core operational baseline for Talvora's container orchestration plane.",
           configuration: { skill_name: "Kubernetes & Infrastructure-as-Code" },
         },
-        {
-          id: "crit-sre-3",
-          criterion_type: "SKILL_PRESENT",
-          is_required: false,
-          source_requirement_text: "Demonstrated incident command leadership for high-impact tier-0 production outages.",
-          relevance_rationale: "Ensures disciplined crisis handling and clear post-mortem remediations.",
-          configuration: { skill_name: "Incident Command" },
-        },
       ],
     },
   ],
@@ -602,148 +661,9 @@ const INITIAL_REQUIREMENT_VERSIONS: Record<string, RequirementVersion[]> = {
           relevance_rationale: "Prevents split-brain state mutations during network partitions.",
           configuration: { skill_name: "Distributed Consensus & Leasing" },
         },
-        {
-          id: "crit-dist-2-4",
-          criterion_type: "SKILL_PRESENT",
-          is_required: false,
-          source_requirement_text: "Experience with AWS SQS, event choreography, and Apache Kafka or RabbitMQ.",
-          relevance_rationale: "Enables rapid ramp-up on our transactional outbox infrastructure.",
-          configuration: { skill_name: "Event Streaming & Queues" },
-        },
-      ],
-    },
-    {
-      id: "ver-dist-1",
-      version_number: 1,
-      title: "Senior Distributed Systems Baseline Criteria v1",
-      description: "Core engineering criteria governing distributed transaction and streaming reliability.",
-      published_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-      change_summary: "Initial publication of distributed systems requirements framework.",
-      criteria: [
-        {
-          id: "crit-dist-1",
-          criterion_type: "MIN_EXPERIENCE_MONTHS",
-          is_required: true,
-          source_requirement_text: "Minimum 5 years (60 months) building high-concurrency backend services.",
-          relevance_rationale: "Essential for designing distributed consensus and resolving complex concurrency races.",
-          configuration: { skill_name: "High-Concurrency Backend" },
-        },
       ],
     },
   ],
-  "job-ai": [
-    {
-      id: "ver-ai-1",
-      version_number: 1,
-      title: "Staff AI Architect Evaluation Framework v1",
-      description: "Defines technical criteria for evaluation, RAG pipelines, and model safety.",
-      published_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-      change_summary: "Published requirement set for AI Architect vacancy.",
-      criteria: [
-        {
-          id: "crit-ai-1",
-          criterion_type: "MIN_EXPERIENCE_MONTHS",
-          is_required: true,
-          source_requirement_text: "Minimum 6 years (72 months) in applied machine learning, NLP, or production LLM systems.",
-          relevance_rationale: "Required for architectural leadership in complex multi-modal extraction pipelines.",
-          configuration: { skill_name: "Machine Learning & RAG" },
-        },
-        {
-          id: "crit-ai-2",
-          criterion_type: "SKILL_PRESENT",
-          is_required: true,
-          source_requirement_text: "Production mastery of PyTorch, vector databases, and deterministic retrieval pipelines.",
-          relevance_rationale: "Powers the citation and evidence grounding mechanisms.",
-          configuration: { skill_name: "Deterministic Grounding" },
-        },
-      ],
-    },
-  ],
-  "job-fe": [
-    {
-      id: "ver-fe-1",
-      version_number: 1,
-      title: "Full Stack UI/API Qualifications v1",
-      description: "Frontend performance and design system standards.",
-      published_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-      change_summary: "Approved candidate requirements for Frontend/Fullstack.",
-      criteria: [
-        {
-          id: "crit-fe-1",
-          criterion_type: "SKILL_PRESENT",
-          is_required: true,
-          source_requirement_text: "Advanced TypeScript, React component lifecycle, and reactive state management.",
-          relevance_rationale: "Core stack for the recruiter desk application.",
-          configuration: { skill_name: "React & TypeScript" },
-        },
-        {
-          id: "crit-fe-2",
-          criterion_type: "SKILL_PRESENT",
-          is_required: false,
-          source_requirement_text: "Demonstrated compliance with WCAG 2.1 AA accessibility standards.",
-          relevance_rationale: "Ensures universal desk usability across keyboard navigation and assistive devices.",
-          configuration: { skill_name: "Accessibility (a11y)" },
-        },
-      ],
-    },
-  ],
-  "job-ta": [
-    {
-      id: "ver-ta-1",
-      version_number: 1,
-      title: "Executive Search & People Operations Standards v1",
-      description: "Recruiting telemetry, structured debriefing, and leadership compensation frameworks.",
-      published_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-      change_summary: "Published criteria governing senior talent acquisition operations.",
-      criteria: [
-        {
-          id: "crit-ta-1",
-          criterion_type: "MIN_EXPERIENCE_MONTHS",
-          is_required: true,
-          source_requirement_text: "Minimum 6 years (72 months) driving technical or executive talent acquisition.",
-          relevance_rationale: "Crucial for engaging staff+ engineering leadership candidates.",
-          configuration: { skill_name: "Executive Sourcing" },
-        },
-        {
-          id: "crit-ta-2",
-          criterion_type: "SKILL_PRESENT",
-          is_required: true,
-          source_requirement_text: "Expertise in ATS compliance, candidate pipeline telemetry, and executive offer negotiation.",
-          relevance_rationale: "Ensures ethical hiring velocity and high offer acceptance rates.",
-          configuration: { skill_name: "Talent Operations & Negotiation" },
-        },
-      ],
-    },
-  ],
-  "job-rust": [
-    {
-      id: "ver-rust-1",
-      version_number: 1,
-      title: "Systems Performance & Kernel Criteria v1",
-      description: "Low-level Linux kernel primitives, memory-mapped I/O, and asynchronous event loops.",
-      published_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-      change_summary: "Approved baseline for Core Systems Engineering.",
-      criteria: [
-        {
-          id: "crit-rust-1",
-          criterion_type: "MIN_EXPERIENCE_MONTHS",
-          is_required: true,
-          source_requirement_text: "Minimum 6 years (72 months) in systems-level programming in Rust, C, or modern C++.",
-          relevance_rationale: "Required for mission-critical zero-copy disk logging.",
-          configuration: { skill_name: "Rust & Linux Systems" },
-        },
-        {
-          id: "crit-rust-2",
-          criterion_type: "SKILL_PRESENT",
-          is_required: true,
-          source_requirement_text: "Hands-on experience with io_uring, eBPF telemetry, and lock-free data structures.",
-          relevance_rationale: "Directly affects p99 transaction commit latency.",
-          configuration: { skill_name: "Kernel Primitives & eBPF" },
-        },
-      ],
-    },
-  ],
-  "job-draft": [],
 };
 
 const INITIAL_CANDIDATES: Candidate[] = [
@@ -820,24 +740,6 @@ const INITIAL_CANDIDATES: Candidate[] = [
     created_at: new Date(Date.now() - 11 * 86400000).toISOString(),
   },
   {
-    id: "cand-aris",
-    display_name: "Dr. Aris Thorne",
-    email: "aris.thorne@kernelresearch.ch",
-    phone: "+41 (22) 767-1190",
-    current_company: "HashiCorp Systems",
-    current_title: "Staff Systems & Storage Engineer",
-    experience_years: 12,
-    location: "Zurich, Switzerland",
-    education: "Ph.D. Operating Systems, ETH Zurich",
-    rating: "★ 4.8 · Strong Hire",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 9 * 86400000).toISOString(),
-  },
-  {
     id: "cand-liam",
     display_name: "Liam O'Connor",
     email: "liam.oconnor@modernstack.dev",
@@ -873,132 +775,6 @@ const INITIAL_CANDIDATES: Candidate[] = [
     version: 1,
     created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
-  {
-    id: "cand-sarah",
-    display_name: "Sarah Jenkins",
-    email: "sarah.jenkins@execsearch.global",
-    phone: "+1 (917) 440-2391",
-    current_company: "Heidrick & Struggles",
-    current_title: "Senior Executive Search Consultant",
-    experience_years: 8,
-    location: "New York, NY",
-    education: "B.A. Organizational Behavior, NYU",
-    rating: "★ 4.7 · Screen Pending",
-    source: "MANUAL_ENTRY",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: false,
-    version: 1,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-sophia",
-    display_name: "Sophia Patel",
-    email: "sophia.patel@algorithmicops.ai",
-    phone: "+1 (408) 789-6631",
-    current_company: "Anthropic",
-    current_title: "Member of Technical Staff (Evaluation)",
-    experience_years: 6,
-    location: "San Francisco, CA",
-    education: "M.S. Artificial Intelligence, Carnegie Mellon",
-    rating: "★ 4.7 · Advance to Panel",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-maya",
-    display_name: "Maya Lin",
-    email: "maya.lin@frontendcraft.co",
-    phone: "+1 (312) 670-8819",
-    current_company: "Figma",
-    current_title: "Senior Design Systems Engineer",
-    experience_years: 6,
-    location: "Chicago, IL",
-    education: "B.S. Human-Computer Interaction, Northwestern",
-    rating: "★ 4.6 · In Review",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-tariq",
-    display_name: "Tariq Al-Mansoor",
-    email: "tariq.mansoor@inferencenet.io",
-    phone: "+1 (415) 309-8812",
-    current_company: "NVIDIA",
-    current_title: "Inference Serving Systems Lead",
-    experience_years: 7,
-    location: "Santa Clara, CA",
-    education: "M.S. Electrical & Computer Engineering, Georgia Tech",
-    rating: "★ 4.8 · Advance to Panel",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-kenji",
-    display_name: "Kenji Sato",
-    email: "kenji.sato@tokyo-cluster.net",
-    phone: "+81 (3) 5550-9811",
-    current_company: "Netflix",
-    current_title: "Senior SRE (Asia-Pacific Region)",
-    experience_years: 8,
-    location: "Tokyo / Remote",
-    education: "B.S. Information Systems, Tokyo University",
-    rating: "★ 4.7 · Ready for Loop",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-amara",
-    display_name: "Amara Okafor",
-    email: "amara.okafor@cloudscale-africa.io",
-    phone: "+44 (20) 7946-0922",
-    current_company: "Uber Platform Core",
-    current_title: "Staff SRE & Kubernetes Specialist",
-    experience_years: 9,
-    location: "London, UK",
-    education: "M.S. Distributed Systems, Imperial College London",
-    rating: "★ 4.8 · Interviewing",
-    source: "UPLOAD_INTAKE",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-  },
-  {
-    id: "cand-alex",
-    display_name: "Alex Rivera",
-    email: "alex.rivera@systems-infra.io",
-    phone: "+1 (512) 990-4123",
-    current_company: "Fastly",
-    current_title: "Network Systems Engineer",
-    experience_years: 3,
-    location: "Austin, TX",
-    education: "B.S. Computer Engineering, UT Austin",
-    rating: "★ 3.4 · Rejected (Experience Minimum)",
-    source: "MANUAL_ENTRY",
-    is_draft: false,
-    current_contact_revision_number: 1,
-    is_contact_verified: true,
-    version: 1,
-    created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
-  },
 ];
 
 const INITIAL_APPLICATIONS: Application[] = [
@@ -1008,21 +784,15 @@ const INITIAL_APPLICATIONS: Application[] = [
     candidate_id: "cand-elena",
     stage: "INTERVIEWING",
     source: "UPLOAD_INTAKE",
-    match_score: "98% Match (4 of 4 Criteria Met)",
+    match_score: "98% Match (All Criteria Verified)",
     target_compensation: "$265,000 Base + 0.15% Equity",
-    notes: "Cleared distributed systems architectural screening with perfect score. System design loop in progress.",
+    notes: "Cleared distributed systems screening. System design loop in progress.",
     scorecards: [
       {
         interviewer: "Dr. Jennifer Vance",
         role: "VP Platform Engineering",
         verdict: "Strong Hire",
-        notes: "Candidate clearly articulated split-brain resolution in Raft consensus. Deep understanding of monotonic lease fencing.",
-      },
-      {
-        interviewer: "Alex Miller",
-        role: "Staff SRE Architect",
-        verdict: "Strong Hire",
-        notes: "Authored clean Python asyncio code for outbox publisher in live exercise in under 20 mins.",
+        notes: "Articulated split-brain recovery in Raft consensus with exemplary clarity.",
       },
     ],
     version: 4,
@@ -1035,21 +805,15 @@ const INITIAL_APPLICATIONS: Application[] = [
     candidate_id: "cand-marcus",
     stage: "DECISION_PENDING",
     source: "MANUAL_ENTRY",
-    match_score: "100% Match (4 of 4 Criteria Met)",
+    match_score: "100% Match (All Criteria Verified)",
     target_compensation: "$280,000 Base + 0.20% Equity",
-    notes: "Completed 4-stage interview loop. Exceptional Raft consensus algorithm proficiency. HM recommended offer.",
+    notes: "Completed 4-stage interview loop. Exceptional Raft consensus algorithm proficiency.",
     scorecards: [
       {
         interviewer: "Dr. Jennifer Vance",
         role: "VP Platform Engineering",
         verdict: "Strong Hire",
-        notes: "Core open-source contributor to Raft consensus. Exceptional grasp of distributed log storage and compaction.",
-      },
-      {
-        interviewer: "Rachel Adams",
-        role: "Head of Product Eng",
-        verdict: "Strong Hire",
-        notes: "Empathetic technical leader with extensive mentorship experience across large distributed teams.",
+        notes: "Core open-source contributor to Raft. Exceptional grasp of distributed log storage.",
       },
     ],
     version: 3,
@@ -1062,15 +826,15 @@ const INITIAL_APPLICATIONS: Application[] = [
     candidate_id: "cand-chloe",
     stage: "DECISION_PENDING",
     source: "UPLOAD_INTAKE",
-    match_score: "96% Match (3 of 3 Criteria Met)",
+    match_score: "96% Match (All Criteria Verified)",
     target_compensation: "$320,000 Base + 0.25% Equity",
-    notes: "Cleared Principal SRE debrief with 4 Strong Hire verdicts. Compensation proposal submitted to board.",
+    notes: "Cleared Principal SRE debrief with 4 Strong Hire verdicts.",
     scorecards: [
       {
         interviewer: "Marcus Cole",
         role: "CISO",
         verdict: "Strong Hire",
-        notes: "Led zero-trust architecture across 12 sovereign AWS regions at Palantir. Unrivaled security depth.",
+        notes: "Led zero-trust architecture across 12 sovereign AWS regions at Palantir.",
       },
     ],
     version: 4,
@@ -1083,146 +847,13 @@ const INITIAL_APPLICATIONS: Application[] = [
     candidate_id: "cand-priya",
     stage: "INTERVIEW_APPROVED",
     source: "UPLOAD_INTAKE",
-    match_score: "99% Match (All Criteria Grounded)",
+    match_score: "99% Match (Criteria Met)",
     target_compensation: "$340,000 Base + 0.25% Equity",
-    notes: "Demonstrated 8 years of applied NLP & high-throughput inference serving. HM scheduled loop.",
-    scorecards: [
-      {
-        interviewer: "Dr. Tariq Chen",
-        role: "Director of AI Research",
-        verdict: "Strong Hire",
-        notes: "Pioneered cited evidence extraction with exact Unicode offset grounding. Top 1% candidate.",
-      },
-    ],
+    notes: "Approved by VP of AI Research for technical round.",
+    scorecards: [],
     version: 2,
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: "app-aris",
-    job_id: "job-rust",
-    candidate_id: "cand-aris",
-    stage: "INTERVIEWING",
-    source: "UPLOAD_INTAKE",
-    match_score: "97% Match (2 of 2 Criteria Met)",
-    target_compensation: "$290,000 Base + 0.18% Equity",
-    notes: "Demonstrated deep mastery of io_uring zero-copy networking and lock-free ring buffers.",
-    scorecards: [
-      {
-        interviewer: "Dr. Klaus Richter",
-        role: "Chief Architect",
-        verdict: "Strong Hire",
-        notes: "World-class kernel systems engineer. Live benchmark reduced packet jitter by 96%.",
-      },
-    ],
-    version: 3,
-    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: "app-amara",
-    job_id: "job-sre",
-    candidate_id: "cand-amara",
-    stage: "INTERVIEWING",
-    source: "UPLOAD_INTAKE",
-    match_score: "95% Match (3 of 3 Criteria Met)",
-    target_compensation: "$300,000 Base + 0.20% Equity",
-    notes: "Deep multi-tenant Kubernetes experience. Scheduled for live incident response simulation.",
-    scorecards: [
-      {
-        interviewer: "Marcus Cole",
-        role: "CISO",
-        verdict: "Strong Hire",
-        notes: "Solid defense-in-depth thinking. Experienced with eBPF network observability in production.",
-      },
-    ],
-    version: 3,
-    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: "app-tariq",
-    job_id: "job-ai",
-    candidate_id: "cand-tariq",
-    stage: "INTERVIEW_APPROVED",
-    source: "UPLOAD_INTAKE",
-    match_score: "94% Match (Criteria Met)",
-    target_compensation: "$310,000 Base + 0.20% Equity",
-    notes: "High-throughput inference specialist. Approved by VP of AI Research for technical round.",
-    scorecards: [],
-    version: 2,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: "app-kenji",
-    job_id: "job-sre",
-    candidate_id: "cand-kenji",
-    stage: "INTERVIEW_APPROVED",
-    source: "UPLOAD_INTAKE",
-    match_score: "92% Match (Criteria Met)",
-    target_compensation: "$280,000 Base + 0.15% Equity",
-    notes: "Extensive Tokyo region AWS failover architecture experience. Ready for panel.",
-    scorecards: [],
-    version: 2,
-    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: "app-sophia",
-    job_id: "job-ai",
-    candidate_id: "cand-sophia",
-    stage: "IN_REVIEW",
-    source: "UPLOAD_INTAKE",
-    match_score: "93% Match (Criteria Met)",
-    target_compensation: "$295,000 Base + 0.18% Equity",
-    notes: "Recruiter review of multi-agent evaluation benchmark research and citations.",
-    scorecards: [],
-    version: 1,
-    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: "app-maya",
-    job_id: "job-fe",
-    candidate_id: "cand-maya",
-    stage: "IN_REVIEW",
-    source: "UPLOAD_INTAKE",
-    match_score: "91% Match (Criteria Met)",
-    target_compensation: "$210,000 Base + 0.10% Equity",
-    notes: "Design system and UI accessibility review in progress with Lead Frontend Architect.",
-    scorecards: [],
-    version: 1,
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: "app-david",
-    job_id: "job-dist",
-    candidate_id: "cand-david",
-    stage: "NEW",
-    source: "MANUAL_ENTRY",
-    match_score: "89% Match (Criteria Met)",
-    target_compensation: "$235,000 Base + 0.12% Equity",
-    notes: "Requires contact verification before scheduling initial phone screen.",
-    scorecards: [],
-    version: 1,
-    created_at: new Date(Date.now() - 6 * 3600000).toISOString(),
-    updated_at: new Date(Date.now() - 6 * 3600000).toISOString(),
-  },
-  {
-    id: "app-sarah",
-    job_id: "job-ta",
-    candidate_id: "cand-sarah",
-    stage: "NEW",
-    source: "MANUAL_ENTRY",
-    match_score: "90% Match (Criteria Met)",
-    target_compensation: "$190,000 Base + Incentive",
-    notes: "Inbound executive talent lead inquiry. Requires verification of corporate email.",
-    scorecards: [],
-    version: 1,
-    created_at: new Date(Date.now() - 14 * 3600000).toISOString(),
-    updated_at: new Date(Date.now() - 14 * 3600000).toISOString(),
   },
   {
     id: "app-liam",
@@ -1238,7 +869,7 @@ const INITIAL_APPLICATIONS: Application[] = [
         interviewer: "Rachel Adams",
         role: "Head of Product Eng",
         verdict: "Strong Hire",
-        notes: "Exceptional design-engineering craftsmanship and WCAG 2.1 AA accessibility leadership.",
+        notes: "Exceptional design-engineering craftsmanship and accessibility leadership.",
       },
     ],
     version: 2,
@@ -1246,20 +877,98 @@ const INITIAL_APPLICATIONS: Application[] = [
     updated_at: new Date(Date.now() - 4 * 3600000).toISOString(),
   },
   {
-    id: "app-alex",
+    id: "app-david",
     job_id: "job-dist",
-    candidate_id: "cand-alex",
-    stage: "REJECTED",
+    candidate_id: "cand-david",
+    stage: "NEW",
     source: "MANUAL_ENTRY",
-    match_score: "Failed 60mo Experience Criteria",
-    target_compensation: "$180,000 Base",
-    notes: "Does not meet mandatory 60 months distributed systems requirement.",
+    match_score: "89% Match (Criteria Met)",
+    target_compensation: "$235,000 Base + 0.12% Equity",
+    notes: "Requires contact verification before scheduling initial phone screen.",
     scorecards: [],
-    version: 2,
-    created_at: new Date(Date.now() - 11 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 9 * 86400000).toISOString(),
+    version: 1,
+    created_at: new Date(Date.now() - 6 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 6 * 3600000).toISOString(),
   },
 ];
+
+const INITIAL_DOCUMENTS: HeldDocument[] = [
+  {
+    id: "doc-elena",
+    filename: "elena_rostova_staff_infra.pdf",
+    candidate_name: "Elena Rostova",
+    filesize: "482 KB",
+    version: 1,
+    status: "CLEAN",
+    problem_code: null,
+  },
+  {
+    id: "doc-marcus",
+    filename: "marcus_vance_principal_dist.pdf",
+    candidate_name: "Marcus Vance",
+    filesize: "520 KB",
+    version: 1,
+    status: "CLEAN",
+    problem_code: null,
+  },
+  {
+    id: "doc-priya",
+    filename: "dr_priya_sharma_ai_research.pdf",
+    candidate_name: "Priya Sharma, Ph.D.",
+    filesize: "610 KB",
+    version: 1,
+    status: "CLEAN",
+    problem_code: null,
+  },
+];
+
+const INITIAL_SOURCES: Record<string, SourceView> = {
+  "doc-elena": {
+    document_id: "doc-elena",
+    version_number: 1,
+    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
+    segments: [
+      {
+        id: "seg-elena-1",
+        page_number: 1,
+        extraction_method: "DIGITAL_TEXT",
+        text: "ELENA ROSTOVA — Staff Infrastructure Architect & Site Reliability Engineer\nSan Francisco, CA · elena.rostova@cloudscale.io · +1 (415) 890-2341\n\nPROFESSIONAL SUMMARY\n9+ years scaling distributed systems infrastructure and zero-trust cloud perimeters. Spearheaded active-active database failovers across AWS us-east-1 and eu-west-1, sustaining 99.999% SLA across 40M daily transactions. Deep expertise in monotonic lease fencing, partitioned event streams, and Raft consensus engines.\n\nTECHNICAL MASTERY\n• Distributed Protocols: Raft, Paxos, Transactional Outbox, Monotonic Fencing, Event Sourcing\n• Cloud Platforms & Security: AWS (EKS, VPC CNI, KMS, IAM Zero-Trust), HashiCorp Vault, SPIFFE/SPIRE\n• Core Languages: Python 3.12+ (AsyncIO, FastAPI), Rust, Go, PostgreSQL ACID internals, Apache Kafka, Redis",
+      },
+      {
+        id: "seg-elena-2",
+        page_number: 2,
+        extraction_method: "DIGITAL_TEXT",
+        text: "NOTABLE PRODUCTION ACCOMPLISHMENTS\nStaff Infrastructure Architect — Datadog / CloudScale Core (2021 – Present)\n• Designed and deployed multi-region active-active database failover across AWS us-east-1 and eu-west-1, eliminating split-brain anomalies during chaos simulation testing.\n• Authored high-throughput transactional outbox service in Python 3.12 and AsyncIO with monotonic lease fencing, sustaining 65,000 TPS under simulated network partitions.\n• Implemented automated credential rotation and secret-less container identity with HashiCorp Vault and SPIFFE/SPIRE.",
+      },
+    ],
+  },
+  "doc-marcus": {
+    document_id: "doc-marcus",
+    version_number: 1,
+    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
+    segments: [
+      {
+        id: "seg-marcus-1",
+        page_number: 1,
+        extraction_method: "DIGITAL_TEXT",
+        text: "MARCUS VANCE — Principal Distributed Systems Engineer\nSeattle, WA · marcus.vance@distributedkernel.net · +1 (206) 555-0182\n\nEXECUTIVE BIO\n11+ years optimizing consensus protocols, transactional outboxes, and high-concurrency low-latency network primitives. Core open-source contributor to Paxos and Raft implementations. Principal engineer leading large-scale multi-region event streams at Amazon Web Services.",
+      },
+    ],
+  },
+  "doc-priya": {
+    document_id: "doc-priya",
+    version_number: 1,
+    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
+    segments: [
+      {
+        id: "seg-priya-1",
+        page_number: 1,
+        extraction_method: "DIGITAL_TEXT",
+        text: "PRIYA SHARMA, Ph.D. — Senior AI Research Scientist & LLM Systems Architect\nPalo Alto, CA · priya.sharma@mlfoundations.org · +1 (650) 441-9872\n\nSPECIALIZATION\nApplied AI research architect focusing on bounded hallucination mitigation, deterministic grounding with exact Unicode offsets, and low-latency inference serving for LLM agents. Ph.D. from UC Berkeley AI Research Lab.",
+      },
+    ],
+  },
+};
 
 const INITIAL_STAGE_HISTORIES: Record<string, StageEvent[]> = {
   "app-elena": [
@@ -1322,205 +1031,35 @@ const INITIAL_STAGE_HISTORIES: Record<string, StageEvent[]> = {
       created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
     },
   ],
-  "app-chloe": [
-    {
-      id: "evt-chloe-1",
-      from_stage: null,
-      to_stage: "NEW",
-      reason: "Intake parse verified. 10 years cloud defense leadership.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-    },
-    {
-      id: "evt-chloe-2",
-      from_stage: "NEW",
-      to_stage: "INTERVIEWING",
-      reason: "Approved directly to onsite panel by Chief Information Security Officer.",
-      actor_role: "HIRING_MANAGER",
-      created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
-    },
-    {
-      id: "evt-chloe-3",
-      from_stage: "INTERVIEWING",
-      to_stage: "DECISION_PENDING",
-      reason: "Cleared 5-round loop unanimously. Executive offer formulation underway.",
-      actor_role: "HIRING_MANAGER",
-      created_at: new Date(Date.now() - 12 * 3600000).toISOString(),
-    },
-  ],
-  "app-aris": [
-    {
-      id: "evt-aris-1",
-      from_stage: null,
-      to_stage: "NEW",
-      reason: "Inbound application parsed from resume.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-    },
-    {
-      id: "evt-aris-2",
-      from_stage: "NEW",
-      to_stage: "INTERVIEW_APPROVED",
-      reason: "Verified author of open source zero-copy ring buffer crate.",
-      actor_role: "HIRING_MANAGER",
-      created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    },
-    {
-      id: "evt-aris-3",
-      from_stage: "INTERVIEW_APPROVED",
-      to_stage: "INTERVIEWING",
-      reason: "Kernel programming live session scheduled with Systems Director.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    },
-  ],
-  "app-priya": [
-    {
-      id: "evt-priya-1",
-      from_stage: null,
-      to_stage: "NEW",
-      reason: "Inbound application parsed from resume.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
-    },
-    {
-      id: "evt-priya-2",
-      from_stage: "NEW",
-      to_stage: "INTERVIEW_APPROVED",
-      reason: "Strong citation evidence on distributed model inference and Unicode offset grounding.",
-      actor_role: "HIRING_MANAGER",
-      created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    },
-  ],
-  "app-liam": [
-    {
-      id: "evt-liam-1",
-      from_stage: "DECISION_PENDING",
-      to_stage: "HIRED",
-      reason: "Candidate signed offer letter. Background screening verified.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
-    },
-  ],
-  "app-alex": [
-    {
-      id: "evt-alex-1",
-      from_stage: "IN_REVIEW",
-      to_stage: "REJECTED",
-      reason: "Missing required distributed transactions and consensus experience.",
-      actor_role: "RECRUITER",
-      created_at: new Date(Date.now() - 9 * 86400000).toISOString(),
-    },
-  ],
 };
 
-const INITIAL_DOCUMENTS: HeldDocument[] = [
-  {
-    id: "doc-elena",
-    filename: "Elena_Rostova_Staff_SRE_CV.pdf",
-    candidate_name: "Elena Rostova",
-    filesize: "482 KB",
-    version: 1,
-    status: "CLEAN",
-    problem_code: null,
-  },
-  {
-    id: "doc-marcus",
-    filename: "Marcus_Vance_Principal_Distributed_Systems.pdf",
-    candidate_name: "Marcus Vance",
-    filesize: "524 KB",
-    version: 1,
-    status: "CLEAN",
-    problem_code: null,
-  },
-  {
-    id: "doc-priya",
-    filename: "Priya_Sharma_Staff_AI_Architect.pdf",
-    candidate_name: "Priya Sharma, Ph.D.",
-    filesize: "612 KB",
-    version: 1,
-    status: "CLEAN",
-    problem_code: null,
-  },
-  {
-    id: "doc-aris",
-    filename: "Dr_Aris_Thorne_Kernel_Systems_Engineer.pdf",
-    candidate_name: "Dr. Aris Thorne",
-    filesize: "394 KB",
-    version: 1,
-    status: "CLEAN",
-    problem_code: null,
-  },
-];
+const STORAGE_KEY = "talvora_recruiting_ops_store_v2";
 
-const INITIAL_SOURCES: Record<string, SourceView> = {
-  "doc-elena": {
-    document_id: "doc-elena",
-    version_number: 1,
-    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
-    segments: [
-      {
-        id: "seg-elena-1",
-        page_number: 1,
-        extraction_method: "DIGITAL_TEXT",
-        text: "ELENA ROSTOVA — Staff Infrastructure Architect & Site Reliability Engineer\nSan Francisco, CA · elena.rostova@cloudscale.io · +1 (415) 890-2341\n\nPROFESSIONAL SUMMARY\n9+ years scaling distributed systems infrastructure and zero-trust cloud perimeters. Spearheaded active-active database failovers across AWS us-east-1 and eu-west-1, sustaining 99.999% SLA across 40M daily transactions. Deep expertise in monotonic lease fencing, partitioned event streams, and Raft consensus engines.\n\nTECHNICAL MASTERY\n• Distributed Protocols: Raft, Paxos, Transactional Outbox, Monotonic Fencing, Event Sourcing\n• Cloud Platforms & Security: AWS (EKS, VPC CNI, KMS, IAM Zero-Trust), HashiCorp Vault, SPIFFE/SPIRE\n• Core Languages: Python 3.12+ (AsyncIO, FastAPI), Rust, Go, PostgreSQL ACID internals, Apache Kafka, Redis",
-      },
-      {
-        id: "seg-elena-2",
-        page_number: 2,
-        extraction_method: "DIGITAL_TEXT",
-        text: "NOTABLE PRODUCTION ACCOMPLISHMENTS\nStaff Infrastructure Architect — Datadog / CloudScale Core (2021 – Present)\n• Designed and deployed multi-region active-active database failover across AWS us-east-1 and eu-west-1, eliminating split-brain anomalies during chaos simulation testing.\n• Authored high-throughput transactional outbox service in Python 3.12 and AsyncIO with monotonic lease fencing, sustaining 65,000 TPS under simulated network partitions.\n• Implemented automated credential rotation and secret-less container identity with HashiCorp Vault and SPIFFE/SPIRE.\n\nSenior Distributed Systems Engineer — DataStream Core (2017 – 2021)\n• Scaled Apache Kafka and RabbitMQ pipelines to ingest 1.2 billion events daily with sub-10ms p99 processing latency.\n• Mentored 14 backend and infrastructure engineers in concurrent memory management and distributed debugging.",
-      },
-    ],
-  },
-  "doc-marcus": {
-    document_id: "doc-marcus",
-    version_number: 1,
-    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
-    segments: [
-      {
-        id: "seg-marcus-1",
-        page_number: 1,
-        extraction_method: "DIGITAL_TEXT",
-        text: "MARCUS VANCE — Principal Distributed Systems Engineer\nSeattle, WA · marcus.vance@distributedkernel.net · +1 (206) 555-0182\n\nEXECUTIVE BIO\n11+ years optimizing consensus protocols, transactional outboxes, and high-concurrency low-latency network primitives. Core open-source contributor to Paxos and Raft implementations. Principal engineer leading large-scale multi-region event streams at Amazon Web Services.\n\nTECHNICAL SPECIALIZATION\n• Systems Primitives: Python, C++, Go, AsyncIO, Linux kernel internals, TCP/IP socket tuning\n• Storage & Queues: PostgreSQL ACID internals, RocksDB, Apache Kafka, AWS SQS, DynamoDB Streams\n• Resilience: Chaos Engineering, Fault Injection, Network Partition Recovery, Monotonic Leases",
-      },
-      {
-        id: "seg-marcus-2",
-        page_number: 2,
-        extraction_method: "DIGITAL_TEXT",
-        text: "SELECTED CONTRIBUTIONS\nPrincipal Engineer — Distributed Kernel Labs / AWS Core (2019 – Present)\n• Architected fault-tolerant state-machine replication cluster with zero data loss under simulated chaos partitions across 3 AWS Availability Zones.\n• Optimized Python ASGI query execution engine reducing CPU cache misses by 28% under 50k RPS load.\n• Designed automated canary verification harnesses and crash recovery testing protocols.",
-      },
-    ],
-  },
-  "doc-priya": {
-    document_id: "doc-priya",
-    version_number: 1,
-    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
-    segments: [
-      {
-        id: "seg-priya-1",
-        page_number: 1,
-        extraction_method: "DIGITAL_TEXT",
-        text: "PRIYA SHARMA, Ph.D. — Senior AI Research Scientist & LLM Systems Architect\nPalo Alto, CA · priya.sharma@mlfoundations.org · +1 (650) 441-9872\n\nSPECIALIZATION\nApplied AI research architect focusing on bounded hallucination mitigation, deterministic grounding with exact Unicode offsets, and low-latency inference serving for LLM agents. Ph.D. from UC Berkeley AI Research Lab.\n\nRESEARCH & INDUSTRY EXPERIENCE\nLead AI Architect — Google DeepMind / ML Foundations Org (2020 – Present)\n• Invented deterministic cited-retrieval pipeline pairing PyTorch vector search with source span verification, reducing citation mismatch error to 0.01%.\n• Published 4 peer-reviewed papers at NeurIPS and ICML on trustworthy agentic reasoning and evaluation metrics.\n• Scaled model serving infrastructure on NVIDIA Triton and vLLM delivering 400 tokens/sec across 200 concurrent user sessions.",
-      },
-    ],
-  },
-  "doc-aris": {
-    document_id: "doc-aris",
-    version_number: 1,
-    extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
-    segments: [
-      {
-        id: "seg-aris-1",
-        page_number: 1,
-        extraction_method: "DIGITAL_TEXT",
-        text: "DR. ARIS THORNE — Staff Systems & Kernel Performance Engineer\nZurich, Switzerland · aris.thorne@kernelresearch.ch · +41 (22) 767-1190\n\nOVERVIEW\nPh.D. in Computer Science (Distributed Operating Systems). Over 12 years developing low-overhead Linux kernel tracing, lock-free concurrency rings, and zero-copy io_uring socket drivers in Rust and C++ at HashiCorp Systems.\n\nKEY ACHIEVEMENTS\n• Reduced p99 packet parsing jitter from 4.2ms to 120 microseconds using custom eBPF filters.\n• Co-maintainer of open-source Rust asynchronous disk journal crate, adopted by top financial exchanges for sub-millisecond durable writes.",
-      },
-    ],
-  },
+type StorageShape = {
+  jobs: Job[];
+  candidates: Candidate[];
+  applications: Application[];
+  documents: HeldDocument[];
+  schedule: InterviewScheduleItem[];
+  hiredEmployees: HiredEmployee[];
+  requirementVersions: Record<string, RequirementVersion[]>;
+  histories: Record<string, StageEvent[]>;
+  sources: Record<string, SourceView>;
+  auditLogs: AuditLog[];
+  interviewPacks: Record<string, InterviewPack>;
 };
 
-type Workspace = {
+function loadStoredState(): StorageShape | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StorageShape;
+  } catch {
+    return null;
+  }
+}
+
+export type Workspace = {
   status: Status;
   me: Me | null;
   jobs: Job[];
@@ -1529,6 +1068,9 @@ type Workspace = {
   documents: HeldDocument[];
   schedule: InterviewScheduleItem[];
   hiredEmployees: HiredEmployee[];
+  interviewers: Interviewer[];
+  interviewPacks: Record<string, InterviewPack>;
+  auditLogs: AuditLog[];
   notice: string | null;
   error: string | null;
   can: (capability: string) => boolean;
@@ -1536,6 +1078,7 @@ type Workspace = {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  // Requisitions
   createJob: (input: {
     title: string;
     description: string;
@@ -1544,12 +1087,40 @@ type Workspace = {
     skill: string;
     publish: boolean;
   }) => Promise<void>;
+  updateJob: (jobId: string, updates: Partial<Job>) => Promise<void>;
+  publishJob: (jobId: string, skillName: string, requirementText: string) => Promise<void>;
+  closeJob: (jobId: string, reason?: string) => Promise<void>;
+  reopenJob: (jobId: string) => Promise<void>;
+  // Candidates
   createCandidate: (input: { display_name: string; email: string }) => Promise<void>;
+  updateCandidate: (candidateId: string, updates: Partial<Candidate>) => Promise<void>;
   attest: (candidate: Candidate, notes: string) => Promise<void>;
+  // Applications & Pipeline
   createApplication: (jobId: string, candidateId: string) => Promise<void>;
   moveStage: (application: Application, target: string, reason: string) => Promise<void>;
-  toggleChecklistItem: (employeeId: string, itemId: string) => void;
+  addScorecard: (applicationId: string, scorecard: Scorecard) => Promise<void>;
+  // Interview Packs & Scheduling
+  generateInterviewPack: (applicationId: string) => Promise<InterviewPack>;
+  scheduleInterview: (input: {
+    candidate_name: string;
+    candidate_role: string;
+    interviewer: string;
+    round_title: string;
+    time: string;
+    date?: string;
+    candidate_id?: string;
+    application_id?: string;
+    notes?: string;
+  }) => Promise<void>;
+  rescheduleInterview: (interviewId: string, newTime: string, newDate?: string) => Promise<void>;
+  cancelInterview: (interviewId: string, reason: string) => Promise<void>;
+  // Intake & Onboarding
   uploadResume: (jobId: string, file: File) => Promise<void>;
+  toggleChecklistItem: (employeeId: string, itemId: string) => void;
+  // Audit Trail & Persistence
+  logActivity: (entry: Omit<AuditLog, "id" | "timestamp">) => void;
+  resetDemoData: () => void;
+  // Loaders
   loadVersions: (jobId: string) => Promise<RequirementVersion[]>;
   loadHistory: (applicationId: string) => Promise<StageEvent[]>;
   loadEligibility: (applicationId: string) => Promise<{ eligible: boolean; reasons: string[] }>;
@@ -1559,29 +1130,82 @@ type Workspace = {
 const WorkspaceContext = createContext<Workspace | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const stored = useMemo(() => loadStoredState(), []);
+
   const [status, setStatus] = useState<Status>("ready");
   const [me, setMe] = useState<Me | null>(HARDCODED_ME);
-  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
-  const [candidates, setCandidates] = useState<Candidate[]>(INITIAL_CANDIDATES);
-  const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS);
-  const [documents, setDocuments] = useState<HeldDocument[]>(INITIAL_DOCUMENTS);
-  const [schedule] = useState<InterviewScheduleItem[]>(INITIAL_SCHEDULE);
-  const [hiredEmployees, setHiredEmployees] = useState<HiredEmployee[]>(INITIAL_HIRED_EMPLOYEES);
-  const [requirementVersions, setRequirementVersions] = useState<Record<string, RequirementVersion[]>>(INITIAL_REQUIREMENT_VERSIONS);
-  const [histories, setHistories] = useState<Record<string, StageEvent[]>>(INITIAL_STAGE_HISTORIES);
-  const [sources, setSources] = useState<Record<string, SourceView>>(INITIAL_SOURCES);
+  const [jobs, setJobs] = useState<Job[]>(() => stored?.jobs ?? INITIAL_JOBS);
+  const [candidates, setCandidates] = useState<Candidate[]>(() => stored?.candidates ?? INITIAL_CANDIDATES);
+  const [applications, setApplications] = useState<Application[]>(() => stored?.applications ?? INITIAL_APPLICATIONS);
+  const [documents, setDocuments] = useState<HeldDocument[]>(() => stored?.documents ?? INITIAL_DOCUMENTS);
+  const [schedule, setSchedule] = useState<InterviewScheduleItem[]>(() => stored?.schedule ?? INITIAL_SCHEDULE);
+  const [hiredEmployees, setHiredEmployees] = useState<HiredEmployee[]>(() => stored?.hiredEmployees ?? INITIAL_HIRED_EMPLOYEES);
+  const [interviewers] = useState<Interviewer[]>(INITIAL_INTERVIEWERS);
+  const [requirementVersions, setRequirementVersions] = useState<Record<string, RequirementVersion[]>>(
+    () => stored?.requirementVersions ?? INITIAL_REQUIREMENT_VERSIONS,
+  );
+  const [histories, setHistories] = useState<Record<string, StageEvent[]>>(
+    () => stored?.histories ?? INITIAL_STAGE_HISTORIES,
+  );
+  const [sources, setSources] = useState<Record<string, SourceView>>(() => stored?.sources ?? INITIAL_SOURCES);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => stored?.auditLogs ?? INITIAL_AUDIT_LOGS);
+  const [interviewPacks, setInterviewPacks] = useState<Record<string, InterviewPack>>(
+    () => stored?.interviewPacks ?? INITIAL_INTERVIEW_PACKS,
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Sync state changes to LocalStorage
+  useEffect(() => {
+    try {
+      const payload: StorageShape = {
+        jobs,
+        candidates,
+        applications,
+        documents,
+        schedule,
+        hiredEmployees,
+        requirementVersions,
+        histories,
+        sources,
+        auditLogs,
+        interviewPacks,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Storage quota or disabled in private browsing
+    }
+  }, [
+    jobs,
+    candidates,
+    applications,
+    documents,
+    schedule,
+    hiredEmployees,
+    requirementVersions,
+    histories,
+    sources,
+    auditLogs,
+    interviewPacks,
+  ]);
+
   useEffect(() => {
     if (!notice) return;
-    const timer = window.setTimeout(() => setNotice(null), 4500);
+    const timer = window.setTimeout(() => setNotice(null), 5000);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
   const can = useCallback((_capability: string) => true, []);
-
   const dismissNotice = useCallback(() => setNotice(null), []);
+
+  const logActivity = useCallback((entry: Omit<AuditLog, "id" | "timestamp">) => {
+    const newLog: AuditLog = {
+      ...entry,
+      id: `aud-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: new Date().toISOString(),
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+  }, []);
 
   const signIn = useCallback(async () => {
     setMe(HARDCODED_ME);
@@ -1599,6 +1223,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setStatus("ready");
   }, []);
 
+  const resetDemoData = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setJobs(INITIAL_JOBS);
+    setCandidates(INITIAL_CANDIDATES);
+    setApplications(INITIAL_APPLICATIONS);
+    setDocuments(INITIAL_DOCUMENTS);
+    setSchedule(INITIAL_SCHEDULE);
+    setHiredEmployees(INITIAL_HIRED_EMPLOYEES);
+    setRequirementVersions(INITIAL_REQUIREMENT_VERSIONS);
+    setHistories(INITIAL_STAGE_HISTORIES);
+    setSources(INITIAL_SOURCES);
+    setAuditLogs(INITIAL_AUDIT_LOGS);
+    setInterviewPacks(INITIAL_INTERVIEW_PACKS);
+    setNotice("Recruitment operations data restored to baseline demo state.");
+  }, []);
+
+  // Requisitions Lifecycle
   const createJob = useCallback(
     async (input: {
       title: string;
@@ -1651,11 +1292,138 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         };
         setRequirementVersions((prev) => ({ ...prev, [newId]: [ver] }));
       }
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: input.publish ? "REQUISITION_PUBLISHED" : "REQUISITION_CREATED",
+        target_type: "REQUISITION",
+        target_id: newId,
+        target_name: input.title,
+        details: input.publish
+          ? `Created and published vacancy ${newJob.req_code} as open rule.`
+          : `Created draft vacancy ${newJob.req_code}.`,
+      });
+
       setNotice(`${input.title} is ${input.publish ? "published and open" : "saved as draft"}.`);
     },
-    [],
+    [logActivity],
   );
 
+  const updateJob = useCallback(
+    async (jobId: string, updates: Partial<Job>) => {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, ...updates, version: j.version + 1, updated_at: new Date().toISOString() } : j)),
+      );
+      const targetJob = jobs.find((j) => j.id === jobId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "REQUISITION_UPDATED",
+        target_type: "REQUISITION",
+        target_id: jobId,
+        target_name: targetJob?.title || jobId,
+        details: `Updated requisition parameters (version ${((targetJob?.version || 1) + 1)}).`,
+      });
+      setNotice(`Requisition updated successfully.`);
+    },
+    [jobs, logActivity],
+  );
+
+  const publishJob = useCallback(
+    async (jobId: string, skillName: string, requirementText: string) => {
+      const job = jobs.find((j) => j.id === jobId);
+      if (!job) return;
+      const nextVer = (job.current_published_version_number || 0) + 1;
+      const newVersion: RequirementVersion = {
+        id: `ver-${jobId}-${nextVer}`,
+        version_number: nextVer,
+        title: `${job.title} Criteria Framework v${nextVer}`,
+        description: requirementText || "Published requirement baseline.",
+        published_at: new Date().toISOString(),
+        change_summary: `Snapshot v${nextVer}: published by talent operations governance.`,
+        criteria: [
+          {
+            id: `crit-${jobId}-${nextVer}-1`,
+            criterion_type: "SKILL_PRESENT",
+            is_required: true,
+            source_requirement_text: requirementText || `Mastery of ${skillName || "Core Engineering Discipline"}.`,
+            relevance_rationale: "Core qualification for applicant evaluation.",
+            configuration: { skill_name: skillName || "Core Skill" },
+          },
+        ],
+      };
+
+      setRequirementVersions((prev) => ({
+        ...prev,
+        [jobId]: [newVersion, ...(prev[jobId] || [])],
+      }));
+
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === jobId
+            ? {
+                ...j,
+                status: "OPEN",
+                current_published_version_number: nextVer,
+                version: j.version + 1,
+                updated_at: new Date().toISOString(),
+              }
+            : j,
+        ),
+      );
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "REQUISITION_PUBLISHED",
+        target_type: "REQUISITION",
+        target_id: jobId,
+        target_name: job.title,
+        details: `Published criteria snapshot v${nextVer} for ${job.title}. Vacancy is law.`,
+      });
+
+      setNotice(`${job.title} criteria v${nextVer} published. Vacancy is now open.`);
+    },
+    [jobs, logActivity],
+  );
+
+  const closeJob = useCallback(
+    async (jobId: string, reason?: string) => {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: "CLOSED", updated_at: new Date().toISOString() } : j)),
+      );
+      const targetJob = jobs.find((j) => j.id === jobId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "REQUISITION_CLOSED",
+        target_type: "REQUISITION",
+        target_id: jobId,
+        target_name: targetJob?.title || jobId,
+        details: reason ? `Closed vacancy: ${reason}` : "Requisition closed by talent operations.",
+      });
+      setNotice(`Requisition closed.`);
+    },
+    [jobs, logActivity],
+  );
+
+  const reopenJob = useCallback(
+    async (jobId: string) => {
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: "OPEN", updated_at: new Date().toISOString() } : j)),
+      );
+      const targetJob = jobs.find((j) => j.id === jobId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "REQUISITION_REOPENED",
+        target_type: "REQUISITION",
+        target_id: jobId,
+        target_name: targetJob?.title || jobId,
+        details: "Reopened requisition for candidate application intake.",
+      });
+      setNotice(`Requisition reopened.`);
+    },
+    [jobs, logActivity],
+  );
+
+  // Candidates Lifecycle
   const createCandidate = useCallback(
     async (input: { display_name: string; email: string }) => {
       const newId = `cand-custom-${Date.now().toString(36)}`;
@@ -1678,24 +1446,69 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         created_at: new Date().toISOString(),
       };
       setCandidates((prev) => [newCand, ...prev]);
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "CANDIDATE_CREATED",
+        target_type: "CANDIDATE",
+        target_id: newId,
+        target_name: input.display_name,
+        details: `Admitted candidate profile for ${input.email} via manual intake.`,
+      });
+
       setNotice(`${input.display_name} is on the record.`);
     },
-    [],
+    [logActivity],
+  );
+
+  const updateCandidate = useCallback(
+    async (candidateId: string, updates: Partial<Candidate>) => {
+      setCandidates((prev) =>
+        prev.map((c) => (c.id === candidateId ? { ...c, ...updates, version: c.version + 1 } : c)),
+      );
+      const cand = candidates.find((c) => c.id === candidateId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "CANDIDATE_UPDATED",
+        target_type: "CANDIDATE",
+        target_id: candidateId,
+        target_name: cand?.display_name || candidateId,
+        details: `Updated candidate dossier profile details.`,
+      });
+      setNotice(`Candidate profile updated.`);
+    },
+    [candidates, logActivity],
   );
 
   const attest = useCallback(
-    async (candidate: Candidate, _notes: string) => {
+    async (candidate: Candidate, notes: string) => {
       setCandidates((prev) =>
-        prev.map((c) => (c.id === candidate.id ? { ...c, is_contact_verified: true, version: c.version + 1 } : c)),
+        prev.map((c) =>
+          c.id === candidate.id
+            ? { ...c, is_contact_verified: true, version: c.version + 1, current_contact_revision_number: c.current_contact_revision_number + 1 }
+            : c,
+        ),
       );
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "CANDIDATE_ATTESTED",
+        target_type: "CANDIDATE",
+        target_id: candidate.id,
+        target_name: candidate.display_name || candidate.email || "Candidate",
+        details: `Attested contact identity: ${notes || "Verified identity and email address on file."}`,
+      });
+
       setNotice(`Attestation recorded for ${candidate.display_name || candidate.email}. Verified address.`);
     },
-    [],
+    [logActivity],
   );
 
+  // Applications & Human Decisions
   const createApplication = useCallback(
     async (jobId: string, candidateId: string) => {
       const cand = candidates.find((c) => c.id === candidateId);
+      const job = jobs.find((j) => j.id === jobId);
       const newId = `app-custom-${Date.now().toString(36)}`;
       const newApp: Application = {
         id: newId,
@@ -1721,9 +1534,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       };
       setApplications((prev) => [newApp, ...prev]);
       setHistories((prev) => ({ ...prev, [newId]: [initialEvt] }));
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "APPLICATION_OPENED",
+        target_type: "APPLICATION",
+        target_id: newId,
+        target_name: cand?.display_name || "Candidate",
+        details: `Opened application for ${cand?.display_name || "Candidate"} on ${job?.title || "Vacancy"}.`,
+      });
+
       setNotice(`Application opened at New for ${cand?.display_name || "candidate"}.`);
     },
-    [candidates],
+    [candidates, jobs, logActivity],
   );
 
   const moveStage = useCallback(
@@ -1738,6 +1561,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         actor_role: "RECRUITER",
         created_at: new Date().toISOString(),
       };
+
       setApplications((prev) =>
         prev.map((a) =>
           a.id === application.id
@@ -1745,10 +1569,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             : a,
         ),
       );
+
       setHistories((prev) => ({
         ...prev,
         [application.id]: [...(prev[application.id] || []), newEvt],
       }));
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "STAGE_TRANSITION",
+        target_type: "APPLICATION",
+        target_id: application.id,
+        target_name: cand?.display_name || "Candidate",
+        details: `Stage updated from ${pretty(application.stage)} to ${pretty(target)}. Reason: ${reason.trim() || "Approved by human reviewer."}`,
+      });
 
       if (target === "HIRED") {
         setHiredEmployees((prev) => {
@@ -1843,7 +1677,267 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setNotice(`Stage written by you. ${cand?.display_name || "Candidate"} moved to ${pretty(target)}.`);
       }
     },
-    [candidates, jobs],
+    [candidates, jobs, logActivity],
+  );
+
+  const addScorecard = useCallback(
+    async (applicationId: string, scorecard: Scorecard) => {
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === applicationId
+            ? { ...a, scorecards: [scorecard, ...a.scorecards], version: a.version + 1, updated_at: new Date().toISOString() }
+            : a,
+        ),
+      );
+      const app = applications.find((a) => a.id === applicationId);
+      const cand = candidates.find((c) => c.id === app?.candidate_id);
+      logActivity({
+        actor: scorecard.interviewer,
+        action: "SCORECARD_SUBMITTED",
+        target_type: "APPLICATION",
+        target_id: applicationId,
+        target_name: cand?.display_name || applicationId,
+        details: `Submitted evaluation verdict: ${scorecard.verdict}. Notes: "${scorecard.notes}"`,
+      });
+      setNotice(`Scorecard submitted by ${scorecard.interviewer} (${scorecard.verdict}).`);
+    },
+    [applications, candidates, logActivity],
+  );
+
+  // Interview Packs
+  const generateInterviewPack = useCallback(
+    async (applicationId: string): Promise<InterviewPack> => {
+      if (interviewPacks[applicationId]) {
+        return interviewPacks[applicationId];
+      }
+      const app = applications.find((a) => a.id === applicationId);
+      const cand = candidates.find((c) => c.id === app?.candidate_id);
+      const job = jobs.find((j) => j.id === app?.job_id);
+
+      if (!cand || !job || !app) {
+        throw new Error("Cannot generate interview pack for missing application context.");
+      }
+
+      const newPack = generateDynamicInterviewPack(cand, job, app);
+      setInterviewPacks((prev) => ({ ...prev, [applicationId]: newPack }));
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "PACK_GENERATED",
+        target_type: "APPLICATION",
+        target_id: applicationId,
+        target_name: cand.display_name || "Candidate",
+        details: `Generated tailored AI Interview Pack for ${cand.display_name} targeting ${job.title}. [Demo Data]`,
+      });
+
+      setNotice(`Interview Pack generated for ${cand.display_name}. Questions & evaluation rubric ready. [Demo Data]`);
+      return newPack;
+    },
+    [applications, candidates, interviewPacks, jobs, logActivity],
+  );
+
+  // Interview Scheduling
+  const scheduleInterview = useCallback(
+    async (input: {
+      candidate_name: string;
+      candidate_role: string;
+      interviewer: string;
+      round_title: string;
+      time: string;
+      date?: string;
+      candidate_id?: string;
+      application_id?: string;
+      notes?: string;
+    }) => {
+      const newId = `sch-${Date.now().toString(36)}`;
+      const newSchedule: InterviewScheduleItem = {
+        id: newId,
+        candidate_id: input.candidate_id,
+        application_id: input.application_id,
+        time: input.time,
+        date: input.date || "Today",
+        candidate_name: input.candidate_name,
+        candidate_role: input.candidate_role,
+        interviewer: input.interviewer,
+        round_title: input.round_title,
+        status: "Scheduled",
+        tone: "human",
+        notes: input.notes,
+      };
+
+      setSchedule((prev) => [newSchedule, ...prev]);
+
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "INTERVIEW_SCHEDULED",
+        target_type: "INTERVIEW",
+        target_id: newId,
+        target_name: input.candidate_name,
+        details: `Scheduled ${input.round_title} with ${input.interviewer} for ${input.time} (${input.date || "Today"}).`,
+      });
+
+      setNotice(`Interview scheduled for ${input.candidate_name} with ${input.interviewer} at ${input.time}.`);
+    },
+    [logActivity],
+  );
+
+  const rescheduleInterview = useCallback(
+    async (interviewId: string, newTime: string, newDate?: string) => {
+      setSchedule((prev) =>
+        prev.map((item) =>
+          item.id === interviewId
+            ? { ...item, time: newTime, date: newDate || item.date || "Today", status: "Scheduled", tone: "human" }
+            : item,
+        ),
+      );
+      const item = schedule.find((s) => s.id === interviewId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "INTERVIEW_RESCHEDULED",
+        target_type: "INTERVIEW",
+        target_id: interviewId,
+        target_name: item?.candidate_name || interviewId,
+        details: `Rescheduled to ${newTime} (${newDate || item?.date || "Today"}).`,
+      });
+      setNotice(`Interview rescheduled for ${item?.candidate_name} at ${newTime}.`);
+    },
+    [logActivity, schedule],
+  );
+
+  const cancelInterview = useCallback(
+    async (interviewId: string, reason: string) => {
+      setSchedule((prev) =>
+        prev.map((item) =>
+          item.id === interviewId
+            ? { ...item, status: "Cancelled", tone: "closed", notes: reason }
+            : item,
+        ),
+      );
+      const item = schedule.find((s) => s.id === interviewId);
+      logActivity({
+        actor: "lead.recruiter@talvora.test",
+        action: "INTERVIEW_CANCELLED",
+        target_type: "INTERVIEW",
+        target_id: interviewId,
+        target_name: item?.candidate_name || interviewId,
+        details: `Interview cancelled: ${reason || "Cancelled by recruiter."}`,
+      });
+      setNotice(`Interview loop cancelled.`);
+    },
+    [logActivity, schedule],
+  );
+
+  // Resume Intake, Quarantine & Screening Simulation
+  const uploadResume = useCallback(
+    async (jobId: string, file: File) => {
+      const docId = `doc-${Date.now().toString(36)}`;
+      const cleanCandidateName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+
+      const candId = `cand-${Date.now().toString(36)}`;
+      const appId = `app-${Date.now().toString(36)}`;
+
+      const newDoc: HeldDocument = {
+        id: docId,
+        filename: file.name,
+        candidate_name: cleanCandidateName,
+        filesize: `${Math.round(file.size / 1024) || 450} KB`,
+        version: 1,
+        status: "CLEAN",
+        problem_code: null,
+      };
+
+      const newCand: Candidate = {
+        id: candId,
+        display_name: cleanCandidateName,
+        email: `${cleanCandidateName.toLowerCase().replace(/\s+/g, ".")}@talent-intake.net`,
+        phone: "+1 (555) 018-9942",
+        current_company: "Specialist Technology Contributor",
+        current_title: "Senior Infrastructure & Systems Engineer",
+        experience_years: 7,
+        location: "Remote",
+        education: "B.S. Computer Engineering",
+        rating: "★ 4.8 · High Fit (Intake Verified)",
+        source: "UPLOAD_INTAKE",
+        is_draft: false,
+        current_contact_revision_number: 1,
+        is_contact_verified: true,
+        version: 1,
+        created_at: new Date().toISOString(),
+      };
+
+      const newApp: Application = {
+        id: appId,
+        job_id: jobId,
+        candidate_id: candId,
+        stage: "IN_REVIEW",
+        source: "UPLOAD_INTAKE",
+        match_score: "96% Match (All Criteria Grounded)",
+        target_compensation: "$250,000 Base + Equity",
+        notes: `Simulated resume extraction and automated criteria evaluation completed on ${file.name}.`,
+        scorecards: [],
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const initialEvt: StageEvent = {
+        id: `evt-${appId}-1`,
+        from_stage: null,
+        to_stage: "IN_REVIEW",
+        reason: "Admitted via intake quarantine. ClamAV virus scan: CLEAN. Auto-screened to In Review.",
+        actor_role: "SYSTEM_SCANNER",
+        created_at: new Date().toISOString(),
+      };
+
+      const extractedSource: SourceView = {
+        document_id: docId,
+        version_number: 1,
+        extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
+        segments: [
+          {
+            id: `seg-${docId}-1`,
+            page_number: 1,
+            extraction_method: "DIGITAL_TEXT",
+            text: `${cleanCandidateName.toUpperCase()} — Professional Dossier & Resume\nVerified Digest: SHA-256 clean receipt.\nClamAV Virus Verdict: CLEAN (Zero malicious signatures detected).\n\nEXECUTIVE PROFILE\nDemonstrated 7+ years building and sustaining high-availability backend services, distributed data flows, and zero-trust cloud infrastructure. Comprehensive mastery of fault-tolerant systems, observability, and container orchestration.`,
+          },
+          {
+            id: `seg-${docId}-2`,
+            page_number: 2,
+            extraction_method: "DIGITAL_TEXT",
+            text: `QUALIFICATIONS GROUNDING & CRITERIA CITATIONS\n• Requirement: 60+ months high-concurrency systems experience -> VERIFIED (84 months continuous professional track record).\n• Requirement: Python & AsyncIO architecture -> VERIFIED (Engineered asynchronous outbox pipeline sustaining 45,000 TPS).\n• Requirement: Distributed consensus & leasing -> VERIFIED (Configured Raft state machine replication and monotonic fencing).`,
+          },
+        ],
+      };
+
+      setDocuments((prev) => [newDoc, ...prev]);
+      setCandidates((prev) => [newCand, ...prev]);
+      setApplications((prev) => [newApp, ...prev]);
+      setHistories((prev) => ({ ...prev, [appId]: [initialEvt] }));
+      setSources((prev) => ({ ...prev, [docId]: extractedSource }));
+
+      const targetJob = jobs.find((j) => j.id === jobId);
+      if (targetJob) {
+        const pack = generateDynamicInterviewPack(newCand, targetJob, newApp);
+        setInterviewPacks((prev) => ({ ...prev, [appId]: pack }));
+      }
+
+      logActivity({
+        actor: "SYSTEM_SCANNER",
+        action: "DOCUMENT_INTAKE_SCREENED",
+        target_type: "DOCUMENT",
+        target_id: docId,
+        target_name: file.name,
+        details: `Quarantine cleared. Created candidate ${cleanCandidateName} and opened application in In Review (96% Criteria Match). [Demo Data]`,
+      });
+
+      setNotice(
+        `${file.name} is clean. ${cleanCandidateName} admitted to In Review with 96% criteria fit. Evidence & interview pack generated. [Demo Data]`,
+      );
+    },
+    [jobs, logActivity],
   );
 
   const toggleChecklistItem = useCallback((employeeId: string, itemId: string) => {
@@ -1868,40 +1962,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }),
     );
   }, []);
-
-  const uploadResume = useCallback(
-    async (_jobId: string, file: File) => {
-      const docId = `doc-custom-${Date.now().toString(36)}`;
-      const newDoc: HeldDocument = {
-        id: docId,
-        filename: file.name,
-        candidate_name: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
-        filesize: `${Math.round(file.size / 1024) || 380} KB`,
-        version: 1,
-        status: "CLEAN",
-        problem_code: null,
-      };
-      setDocuments((prev) => [newDoc, ...prev]);
-      setSources((prev) => ({
-        ...prev,
-        [docId]: {
-          document_id: docId,
-          version_number: 1,
-          extraction: { status: "SUCCEEDED", problem_code: null, error_detail: null },
-          segments: [
-            {
-              id: `seg-${docId}-1`,
-              page_number: 1,
-              extraction_method: "DIGITAL_TEXT",
-              text: `INTAKE EXTRACTION RECORD — ${file.name.toUpperCase()}\n\nVerified Document Digest: SHA-256 clean receipt.\nClamAV Virus Verdict: CLEAN (Zero signatures detected).\n\nCANDIDATE BACKGROUND & RESUME SUMMARY:\nSpecialist credentials admitted through Talvora Quarantine pipeline.\nAll extracted sections parsed into source-addressable text spans ready for criteria evaluation.`,
-            },
-          ],
-        },
-      }));
-      setNotice(`${file.name} is clean. Admitted to Evidence desk.`);
-    },
-    [],
-  );
 
   const loadVersions = useCallback(
     async (jobId: string): Promise<RequirementVersion[]> => {
@@ -1931,16 +1991,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const loadHistory = useCallback(
     async (applicationId: string): Promise<StageEvent[]> => {
-      return histories[applicationId] || [
-        {
-          id: `evt-${applicationId}-init`,
-          from_stage: null,
-          to_stage: "NEW",
-          reason: "Candidate application admitted via intake.",
-          actor_role: "RECRUITER",
-          created_at: new Date(Date.now() - 48 * 3600000).toISOString(),
-        },
-      ];
+      return (
+        histories[applicationId] || [
+          {
+            id: `evt-${applicationId}-init`,
+            from_stage: null,
+            to_stage: "NEW",
+            reason: "Candidate application admitted via intake.",
+            actor_role: "RECRUITER",
+            created_at: new Date(Date.now() - 48 * 3600000).toISOString(),
+          },
+        ]
+      );
     },
     [histories],
   );
@@ -1987,6 +2049,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       documents,
       schedule,
       hiredEmployees,
+      interviewers,
+      interviewPacks,
+      auditLogs,
       notice,
       error,
       can,
@@ -1995,43 +2060,71 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       signOut,
       refresh,
       createJob,
+      updateJob,
+      publishJob,
+      closeJob,
+      reopenJob,
       createCandidate,
+      updateCandidate,
       attest,
       createApplication,
       moveStage,
+      addScorecard,
+      generateInterviewPack,
+      scheduleInterview,
+      rescheduleInterview,
+      cancelInterview,
       toggleChecklistItem,
       uploadResume,
+      logActivity,
+      resetDemoData,
       loadVersions,
       loadHistory,
       loadEligibility,
       loadSource,
     }),
     [
-      applications,
-      can,
-      candidates,
-      createApplication,
-      createCandidate,
-      createJob,
-      dismissNotice,
-      documents,
-      error,
-      hiredEmployees,
-      jobs,
-      loadEligibility,
-      loadHistory,
-      loadSource,
-      loadVersions,
+      status,
       me,
-      moveStage,
-      notice,
-      refresh,
+      jobs,
+      candidates,
+      applications,
+      documents,
       schedule,
+      hiredEmployees,
+      interviewers,
+      interviewPacks,
+      auditLogs,
+      notice,
+      error,
+      can,
+      dismissNotice,
       signIn,
       signOut,
-      status,
+      refresh,
+      createJob,
+      updateJob,
+      publishJob,
+      closeJob,
+      reopenJob,
+      createCandidate,
+      updateCandidate,
+      attest,
+      createApplication,
+      moveStage,
+      addScorecard,
+      generateInterviewPack,
+      scheduleInterview,
+      rescheduleInterview,
+      cancelInterview,
       toggleChecklistItem,
       uploadResume,
+      logActivity,
+      resetDemoData,
+      loadVersions,
+      loadHistory,
+      loadEligibility,
+      loadSource,
     ],
   );
 
