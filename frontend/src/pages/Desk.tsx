@@ -13,10 +13,24 @@ export function Desk() {
   return (
     <>
       <PageHead
-        kicker={me?.role ? pretty(me.role) : "Session"}
+        kicker={me?.role ? `${pretty(me.role)} · Use case 04` : "Use case 04 · Recruiting"}
         title={`${greeting()}. The record is live.`}
-        lede="Counts below come from the API for this organization. A draft vacancy screens nobody. A stage moves only when you write it."
+        lede="This desk is the recruiting workflow: a published rule, a real person, and a stage only you can write. Counts come from the API. A draft screens nobody."
       />
+      <ol className="path">
+        <li>
+          <Link to="/vacancies">Publish a rule</Link>
+        </li>
+        <li>
+          <Link to="/people">Add a person</Link>
+        </li>
+        <li>
+          <Link to="/pipeline">Open an application</Link>
+        </li>
+        <li>
+          <Link to="/intake">Admit a file</Link>
+        </li>
+      </ol>
       <section className="metrics">
         <Link to="/vacancies">
           <span>Open vacancies</span>

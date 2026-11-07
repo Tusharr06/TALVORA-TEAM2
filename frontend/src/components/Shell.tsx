@@ -25,6 +25,7 @@ export function Shell() {
           <VoraRing variant="mark" />
           <span>Talvora</span>
         </NavLink>
+        <p className="case">Use case 04 · Recruiting</p>
         <p className="law">Models may read. They may not move.</p>
         <div className="top-actions">
           {me ? (
