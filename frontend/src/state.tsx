@@ -207,7 +207,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const run = async () => {
       setError(null);
       try {
-        let profile = await api<Me>("/api/v1/auth/me");
+        const probe = await api<Me & { authenticated: boolean }>("/api/v1/auth/session");
+        if (!probe.authenticated) {
+          setMe(null);
+          setJobs([]);
+          setCandidates([]);
+          setApplications([]);
+          setStatus("signed-out");
+          return;
+        }
+        let profile: Me = probe;
         if (!profile.active_organization_id) profile = await ensureTenant(profile);
         setMe(profile);
         const [jobPage, candidatePage, applicationPage] = await Promise.all([

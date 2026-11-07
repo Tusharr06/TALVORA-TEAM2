@@ -25,6 +25,18 @@ class MeResponse(BaseModel):
     organizations: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class SessionProbeResponse(BaseModel):
+    """Desk boot check. Signed-out is a normal 200, not an error."""
+
+    authenticated: bool
+    user_id: UUID | None = None
+    email: str | None = None
+    active_organization_id: UUID | None = None
+    role: str | None = None
+    capabilities: list[str] = Field(default_factory=list)
+    organizations: list[dict[str, Any]] = Field(default_factory=list)
+
+
 class CsrfResponse(BaseModel):
     """Session anti-CSRF token response."""
 

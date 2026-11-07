@@ -3,7 +3,7 @@ import { VoraRing } from "../components/VoraRing";
 import { useWorkspace } from "../state";
 
 const TAPE =
-  "Use case 04 · Recruiting · Published criteria · Quarantined files · Cited evidence · Human stage · No protected traits · A model may read · A model may not decide · ";
+  "Quarantine · ClamAV · Clean bucket · Page-level citation · Versioned criteria · Human stage · Reason to reject · No protected traits · Opaque storage keys · ";
 
 const HARNESS = [
   ["Trusted context", "A vacancy screens people only after a requirement version is published."],
@@ -22,25 +22,25 @@ export function Gate() {
           <VoraRing variant="mark" />
           <span>Talvora</span>
         </Link>
-        <p>Clarivate AI Innovation Challenge</p>
+        <p>Intelligent talent operations</p>
       </header>
       <section className="gate-hero">
         <div className="gate-copy">
-          <p className="kicker">Use case 04 · Recruiting operations</p>
+          <p className="kicker">Vol. 01 · The desk</p>
           <h1>
-            Screen the rule.
-            <em> A person decides.</em>
+            Evidence first.
+            <em> Humans decide.</em>
           </h1>
           <p className="lede">
-            Talvora runs the recruiting desk the brief asks for: minimum criteria, candidate
-            evidence, and a stage change with a name on it. The model can read the record. It cannot
-            move the person, invent a citation, or hire anyone.
+            Resumes enter quarantine. Hiring rules are published versions. A stage changes only when
+            a person writes it down. Talvora will show you the sentence, the page, and the name —
+            and it will not let a model move the person.
           </p>
           {error ? <p className="banner">{error}</p> : null}
           <div className="gate-actions">
             {status === "ready" ? (
               <Link className="btn btn-primary" to="/desk">
-                Open the live desk
+                Enter the desk
               </Link>
             ) : (
               <button
@@ -49,11 +49,11 @@ export function Gate() {
                 disabled={status === "loading"}
                 onClick={() => void signIn()}
               >
-                {status === "loading" ? "Checking the session…" : "Sign in and try the workflow"}
+                {status === "loading" ? "Checking the session…" : "Sign in to the desk"}
               </button>
             )}
-            <Link className="btn btn-ghost" to="/vacancies">
-              See a published rule
+            <Link className="btn btn-ghost" to="/evidence">
+              Open a citation
             </Link>
           </div>
         </div>

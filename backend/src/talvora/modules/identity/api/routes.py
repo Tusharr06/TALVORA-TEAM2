@@ -16,7 +16,12 @@ from talvora.modules.identity.api.dependencies import (
     get_db_session,
     get_session_service,
 )
-from talvora.modules.identity.api.dto import CsrfResponse, LoginResponse, MeResponse
+from talvora.modules.identity.api.dto import (
+    CsrfResponse,
+    LoginResponse,
+    MeResponse,
+    SessionProbeResponse,
+)
 from talvora.modules.identity.application.session_service import SessionService
 from talvora.modules.identity.domain.models import LoginTransaction, User
 from talvora.modules.identity.infrastructure.oidc import (
@@ -224,6 +229,45 @@ def callback(
         max_age=settings.session_absolute_timeout_hours * 3600,
     )
     return redirect_resp
+
+
+def _clear_session_cookie(response: Response, settings: Settings) -> None:
+    """Drop a presented session cookie that no longer matches a live session."""
+    response.delete_cookie(key=settings.session_cookie_name, path="/")
+    response.delete_cookie(key=f"__Host-{settings.session_cookie_name}", path="/")
+
+
+@router.get("/session", response_model=SessionProbeResponse)
+def get_session(
+    request: Request,
+    response: Response,
+    settings: Settings = Depends(get_settings),
+    actor: ActorContext | None = Depends(get_current_actor_optional),
+    db: Session = Depends(get_db_session),
+) -> SessionProbeResponse:
+    """Tell the desk whether a browser session is live.
+
+    A missing or stale cookie is signed-out, returned as 200. A stale cookie is
+    cleared so the browser stops presenting it on every later request.
+    """
+    if actor is None or not actor.is_authenticated:
+        if request.cookies.get(settings.session_cookie_name) or request.cookies.get(
+            f"__Host-{settings.session_cookie_name}"
+        ):
+            _clear_session_cookie(response, settings)
+        return SessionProbeResponse(authenticated=False)
+
+    org_service = OrganizationService()
+    orgs = org_service.list_user_organizations(db, actor.user_id)
+    return SessionProbeResponse(
+        authenticated=True,
+        user_id=actor.user_id,
+        email=actor.principal.email if actor.principal else "",
+        active_organization_id=actor.tenant_id,
+        role=actor.membership.role if actor.membership else None,
+        capabilities=sorted(actor.membership.capabilities) if actor.membership else [],
+        organizations=orgs,
+    )
 
 
 @router.get("/me", response_model=MeResponse)
