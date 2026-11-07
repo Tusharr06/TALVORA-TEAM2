@@ -3,6 +3,7 @@ import { Shell } from "./components/Shell";
 import { Desk } from "./pages/Desk";
 import { Evidence } from "./pages/Evidence";
 import { Gate } from "./pages/Gate";
+import { Hired } from "./pages/Hired";
 import { Intake } from "./pages/Intake";
 import { People } from "./pages/People";
 import { Pipeline } from "./pages/Pipeline";
@@ -22,6 +23,7 @@ export function App() {
             <Route path="/people" element={<People />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/evidence" element={<Evidence />} />
+            <Route path="/hired" element={<Hired />} />
           </Route>
           <Route path="*" element={<Gate />} />
         </Routes>

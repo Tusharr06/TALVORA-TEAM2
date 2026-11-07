@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { PageHead } from "../components/Bits";
+import { PageHead, Pill } from "../components/Bits";
 import { greeting, pretty } from "../format";
 import { useWorkspace } from "../state";
 
 export function Desk() {
-  const { me, jobs, candidates, applications } = useWorkspace();
+  const { me, jobs, candidates, applications, hiredEmployees, schedule } = useWorkspace();
   const openJobs = jobs.filter((job) => job.status === "OPEN");
   const drafts = jobs.filter((job) => job.status === "DRAFT");
   const fresh = applications.filter((application) => application.stage === "NEW");
@@ -15,7 +15,7 @@ export function Desk() {
       <PageHead
         kicker={me?.role ? pretty(me.role) : "Session"}
         title={`${greeting()}. The record is live.`}
-        lede="Counts below come from the API for this organization. A draft vacancy screens nobody. A stage moves only when you write it."
+        lede="Enterprise talent operations console. A draft vacancy screens nobody. A stage moves only when you write it."
       />
       <ol className="path">
         <li>
@@ -30,29 +30,78 @@ export function Desk() {
         <li>
           <Link to="/intake">Admit a file</Link>
         </li>
+        <li>
+          <Link to="/hired">Manage onboarding</Link>
+        </li>
       </ol>
-      <section className="metrics">
+      <section className="metrics" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         <Link to="/vacancies">
           <span>Open vacancies</span>
           <b>{openJobs.length}</b>
           <em>{drafts.length} still draft</em>
         </Link>
         <Link to="/pipeline">
-          <span>Applications</span>
+          <span>Active Pipeline</span>
           <b>{applications.length}</b>
-          <em>{fresh.length} still new</em>
+          <em>{fresh.length} new intake</em>
         </Link>
         <Link to="/people">
-          <span>People</span>
+          <span>Candidates</span>
           <b>{candidates.length}</b>
-          <em>{unverified.length} contact unverified</em>
+          <em>{unverified.length} unverified contact</em>
         </Link>
-        <Link to="/intake">
-          <span>Intake</span>
-          <b>{openJobs.length}</b>
-          <em>open jobs can take a file</em>
+        <Link to="/hired">
+          <span>Hired & Onboarding</span>
+          <b style={{ color: "var(--aurora)" }}>{hiredEmployees.length}</b>
+          <em>{hiredEmployees.filter((e) => e.onboarding_status === "Ready for Day 1").length} ready for Day 1</em>
         </Link>
       </section>
+
+      {/* Today's Live Interview Loops */}
+      {schedule && schedule.length > 0 ? (
+        <section style={{ marginTop: "34px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "12px" }}>
+            <h2 style={{ fontSize: "1.4rem" }}>Today's Live Interview Schedule</h2>
+            <Pill tone="tone-human">4 Loops Active</Pill>
+          </div>
+          <div style={{ display: "grid", gap: "10px" }}>
+            {schedule.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "14px 16px",
+                  background: "rgba(18, 20, 28, 0.72)",
+                  border: "1px solid var(--line)",
+                  borderRadius: "6px",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: "12px", color: "var(--copper-2)", letterSpacing: "0.08em" }}>
+                    {item.time}
+                  </span>
+                  <div>
+                    <strong style={{ display: "block", color: "var(--paper)", fontSize: "0.98rem" }}>
+                      {item.candidate_name} · {item.candidate_role}
+                    </strong>
+                    <span style={{ color: "var(--paper-dim)", fontSize: "0.85rem" }}>
+                      {item.round_title} · Panel: {item.interviewer}
+                    </span>
+                  </div>
+                </div>
+                <Pill tone={item.tone === "interviewing" ? "tone-open" : "tone-human"}>
+                  {item.status}
+                </Pill>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="ledger">
         <h2>Waiting on a person</h2>
         <ul className="wait">

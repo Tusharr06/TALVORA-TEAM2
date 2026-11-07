@@ -30,7 +30,7 @@ from talvora.modules.identity.infrastructure.oidc import (
     OidcClient,
 )
 from talvora.modules.organizations.application.service import OrganizationService
-from talvora.modules.organizations.domain.models import Membership
+from talvora.modules.organizations.domain.models import Membership, Organization
 from talvora.shared.application.actor import ActorContext
 from talvora.shared.infrastructure.security import (
     generate_csrf_token,
@@ -199,6 +199,18 @@ def callback(
         .order_by(Membership.created_at.asc())
     )
     first_mem = db.scalar(mem_stmt)
+    if first_mem is None and settings.allow_dev_identity_adapter:
+        primary_org = db.scalar(sa.select(Organization).order_by(Organization.created_at.asc()))
+        if primary_org:
+            first_mem = Membership(
+                tenant_id=primary_org.id,
+                user_id=user.id,
+                role="ORG_ADMIN",
+                status="ACTIVE",
+            )
+            db.add(first_mem)
+            db.flush()
+
     default_tenant_id = first_mem.tenant_id if first_mem else None
 
     # Create server-managed opaque session (Session Fixation Defense: Always a fresh token)

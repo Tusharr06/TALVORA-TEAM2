@@ -100,8 +100,8 @@ class MockOidcClient:
         self.grants[simulated_code] = {
             "code_challenge": challenge,
             "nonce": nonce,
-            "subject": f"usr_sub_{state[:8]}",
-            "email": f"user_{state[:8]}@talvora.test",
+            "subject": "usr_sub_local_recruiter",
+            "email": "lead.recruiter@talvora.test",
             "email_verified": "True",
         }
 

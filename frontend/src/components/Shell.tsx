@@ -10,6 +10,7 @@ const LINKS = [
   ["People", "/people"],
   ["Intake", "/intake"],
   ["Evidence", "/evidence"],
+  ["Hired", "/hired"],
 ] as const;
 
 export function Shell() {

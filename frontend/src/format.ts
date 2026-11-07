@@ -54,6 +54,7 @@ export const ACTIVE_STAGES: readonly Stage[] = [
   "INTERVIEW_APPROVED",
   "INTERVIEWING",
   "DECISION_PENDING",
+  "HIRED",
 ];
 
 export const TERMINAL_STAGES: readonly Stage[] = ["HIRED", "REJECTED", "WITHDRAWN"];
