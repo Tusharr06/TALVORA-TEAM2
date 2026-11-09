@@ -405,8 +405,8 @@ TALVORA's codebase is validated across multiple layers of automated testing:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-org/talvora.git
-cd talvora
+git clone https://github.com/Tusharr06/TALVORA-TEAM2.git
+cd TALVORA-TEAM2
 ```
 
 ### 2. Frontend Setup & Launch
