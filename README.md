@@ -20,11 +20,9 @@
 
 <br/>
 
-[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Tusharr06/TALVORA-TEAM2.git)
-[![Demo Video](https://img.shields.io/badge/Demo_Video-Watch_Walkthrough-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://drive.google.com/drive/folders/1Q2Vbi5UilTW_ITDmILGdm78qyK03gvNT)
-[![Final Presentation](https://img.shields.io/badge/Presentation-Open_Slide_Deck-D83B01?style=for-the-badge&logo=microsoftpowerpoint&logoColor=white)](https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT)
-[![Project Report](https://img.shields.io/badge/Documentation-Project_Spec-4285F4?style=for-the-badge&logo=googledocs&logoColor=white)](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA)
-[![Team Resumes](https://img.shields.io/badge/Team_Resumes-Candidate_Dossiers-0F9D58?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA)
+[![PowerPoint Presentation](https://img.shields.io/badge/PowerPoint_Presentation-Open_Folder-D83B01?style=for-the-badge&logo=microsoftpowerpoint&logoColor=white)](https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT)
+[![Resume & Supporting Documents](https://img.shields.io/badge/Resume_%26_Supporting_Documents-Open_Folder-0F9D58?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA)
+[![Demo Video](https://img.shields.io/badge/Demo_Video-Watch_Folder-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://drive.google.com/drive/folders/1Q2Vbi5UilTW_ITDmILGdm78qyK03gvNT)
 
 </div>
 
@@ -35,11 +33,9 @@
 
 | Resource | Link |
 | :--- | :--- |
-| **GitHub Repository** | [https://github.com/Tusharr06/TALVORA-TEAM2.git](https://github.com/Tusharr06/TALVORA-TEAM2.git) |
+| **PowerPoint Presentation** | [https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT](https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT) |
+| **Resume & Supporting Documents** | [https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA) |
 | **Demo Video** | [https://drive.google.com/drive/folders/1Q2Vbi5UilTW_ITDmILGdm78qyK03gvNT](https://drive.google.com/drive/folders/1Q2Vbi5UilTW_ITDmILGdm78qyK03gvNT) |
-| **Final Presentation (PPT)** | [https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT](https://drive.google.com/drive/folders/1XyR2gt36STJ2VR9j43cCBvlb_isr1IeT) |
-| **Project Documentation & Report** | [https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA) |
-| **Team Resumes** | [https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA](https://drive.google.com/drive/folders/1YsnTODCHhIZ5GraGnFBUFEHf0uFaggWA) |
 
 ---
 
